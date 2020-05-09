@@ -23,8 +23,6 @@ checksum = "c3d87b23d6a92cd03af510a5ade527033f6aa6fa92161e2d5863a907d4c5e31d"
 [[package]]
 name = "nfd2"
 version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4c80f638769134683216b3f4ef6423345f9c7d103d033f5457d931268ba886dd"
 dependencies = [
  "cc",
 ]
