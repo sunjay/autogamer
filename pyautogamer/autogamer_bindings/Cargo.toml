@@ -1,0 +1,15 @@
+[package]
+name = "autogamer_bindings"
+version = "0.1.0"
+authors = ["Sunjay Varma <varma.sunjay@gmail.com>"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+autogamer = {path = "../.."}
+
+[dependencies.pyo3]
+version = "0.10"
+features = ["extension-module"]
