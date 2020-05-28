@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from autogamer import *
+from pyautogamer import *
 
 def main():
     game = Game()
