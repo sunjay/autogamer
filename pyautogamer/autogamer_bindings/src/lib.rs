@@ -1,16 +1,44 @@
-use autogamer::foo;
 use pyo3::prelude::*;
-use pyo3::wrap_pyfunction;
 
 #[pymodule]
-fn autogamer_bindings(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_wrapped(wrap_pyfunction!(run_foo))?;
-
+/// Bindings to the autogamer native module
+pub fn autogamer_bindings(_py: Python, pymod: &PyModule) -> PyResult<()> {
+    pymod.add_class::<Game>()?;
+    pymod.add_class::<Map>()?;
     Ok(())
 }
 
-#[pyfunction]
-/// Runs the foo function
-pub fn run_foo() {
-    foo()
+#[pyclass]
+#[derive(Debug)]
+pub struct Game {
+}
+
+#[pymethods]
+impl Game {
+    #[new]
+    fn new() -> Self {
+        Self {}
+    }
+
+    fn add(&mut self, map: &Map) {
+    }
+
+    fn fullscreen(&self) {
+    }
+
+    fn run(&self) {
+    }
+}
+
+#[pyclass]
+#[derive(Debug)]
+pub struct Map {
+}
+
+#[pymethods]
+impl Map {
+    #[new]
+    fn new(path: &str) -> Self {
+        Self {}
+    }
 }

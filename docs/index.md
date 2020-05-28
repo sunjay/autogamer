@@ -22,7 +22,7 @@ autogamer requires very little setup to get started:
   ```py
   #!/usr/bin/env python3
 
-  from autogamer import *
+  from pyautogamer import *
 
   def main():
       game = Game()

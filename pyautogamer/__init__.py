@@ -1,3 +1,3 @@
 from .autogamer_bindings import *
 
-run_foo()
+__all__ = ["Game", "Map"]
