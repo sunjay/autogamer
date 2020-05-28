@@ -53,24 +53,13 @@ def get_platform(target=None):
     else:
         raise ValueError("x.py ran with unsupported target: {}".format(target))
 
-def run_command(cmd):
+def run_command(cmd, **run_args):
     print(" ".join(cmd))
-    subprocess.run(cmd, check=True)
+    subprocess.run(cmd, check=True, **run_args)
 
 def copy(src, dst):
     print("cp '{}' '{}'".format(src, dst))
     copy2(src, dst)
-
-def parse_args():
-    parser = argparse.ArgumentParser(description="Process some integers.")
-    subcommands = parser.add_subparsers(dest="subcommand")
-
-    build = subcommands.add_parser("build")
-    build.add_argument("--release", action="store_true")
-    build.add_argument("--target", metavar="TRIPLE")
-
-    args, unknownargs = parser.parse_known_args()
-    return parser, args, unknownargs
 
 def build(app, args, build_args):
     if args.release:
@@ -99,6 +88,46 @@ def build(app, args, build_args):
     nativemod_path = os.path.join(app.pydir, platform.nativemod(app.libname))
     copy(dylib_path, nativemod_path)
 
+def run(app, args, build_args):
+    build(app, args, build_args)
+
+    autogamerlib = os.path.abspath(os.curdir)
+
+    scriptname = args.sample
+    if not scriptname.endswith(".py"):
+        scriptname += ".py"
+
+    try:
+        run_command(
+            [sys.executable, scriptname],
+            cwd="sample",
+            env={"PYTHONPATH": autogamerlib},
+        )
+    except subprocess.CalledProcessError:
+        print("Command exited with an error")
+        sys.exit(1)
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    subcommands = parser.add_subparsers(dest="subcommand")
+
+    def add_build_args(subcommand):
+        subcommand.add_argument("--release", action="store_true",
+            help="run cargo in release mode")
+        subcommand.add_argument("--target", metavar="TRIPLE",
+            help="compile autogamer for the given target triple")
+
+    build = subcommands.add_parser("build")
+    add_build_args(build)
+
+    run = subcommands.add_parser("run")
+    run.add_argument("--sample", metavar="SAMPLE", default="game.py",
+        help="filename in `sample/` to run (default: \"game.py\")")
+    add_build_args(run)
+
+    args, unknownargs = parser.parse_known_args()
+    return parser, args, unknownargs
+
 def main():
     parser, args, unknownargs = parse_args()
 
@@ -113,6 +142,8 @@ def main():
 
     if args.subcommand == "build":
         build(app, args, unknownargs)
+    elif args.subcommand == "run":
+        run(app, args, unknownargs)
     else:
         parser.print_usage()
         sys.exit(1)
