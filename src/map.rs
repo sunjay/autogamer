@@ -1,5 +1,5 @@
 use thiserror::Error;
-use sdl2::pixels::Color;
+use sdl2::{pixels::Color, rect::Point};
 
 #[derive(Debug, Error)]
 #[error(transparent)]
@@ -18,6 +18,60 @@ macro_rules! assert_support {
             Err(Unsupported(format!($($arg)+)))?
         }
     };
+}
+
+#[derive(Debug)]
+struct Markers {
+    level_start: Option<Point>,
+}
+
+impl Markers {
+    pub fn from_object_groups(groups: &[tiled::ObjectGroup]) -> Self {
+        let mut level_start = None;
+
+        for group in groups {
+            let tiled::ObjectGroup {
+                name,
+                opacity: _,
+                visible: _,
+                objects,
+                colour: _,
+                layer_index: _,
+                properties: _,
+            } = group;
+
+            if name != "markers" {
+                continue;
+            }
+
+            for obj in objects {
+                let tiled::Object {
+                    id: _,
+                    gid: _,
+                    name,
+                    obj_type: _,
+                    width: _,
+                    height: _,
+                    x,
+                    y,
+                    rotation: _,
+                    visible: _,
+                    shape,
+                    properties: _,
+                } = obj;
+
+                let point_shape = tiled::ObjectShape::Rect {width: 0.0, height: 0.0};
+                if name == "level_start" && *shape == point_shape {
+                    if level_start.is_some() {
+                        println!("Warning: multiple `level_start` markers defined");
+                    }
+                    level_start = Some(Point::new(*x as i32, *y as i32));
+                }
+            }
+        }
+
+        Self {level_start}
+    }
 }
 
 #[derive(Debug)]
@@ -51,6 +105,9 @@ impl Map {
         if !image_layers.is_empty() {
             println!("Warning: image layers are not supported yet");
         }
+
+        let markers = Markers::from_object_groups(&object_groups);
+        dbg!(markers);
 
         let background_color = match background_color {
             Some(tiled::Colour {red, green, blue}) => Color {r: red, g: green, b: blue, a: 255},
