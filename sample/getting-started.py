@@ -5,7 +5,7 @@ from pyautogamer import *
 def main():
     game = Game()
 
-    level = Map("levels/candy.tmx")
+    level = Map("levels/test.tmx")
     game.add(level)
 
     game.fullscreen()
