@@ -1,4 +1,6 @@
+use autogamer as ag;
 use pyo3::prelude::*;
+use pyo3::exceptions::ValueError;
 
 #[pymodule]
 /// Bindings to the autogamer native module
@@ -33,12 +35,15 @@ impl Game {
 #[pyclass]
 #[derive(Debug)]
 pub struct Map {
+    map: ag::Map,
 }
 
 #[pymethods]
 impl Map {
     #[new]
-    fn new(path: &str) -> Self {
-        Self {}
+    fn new(path: &str) -> PyResult<Self> {
+        let map = ag::Map::load(path)
+            .map_err(|err| ValueError::py_err(err.to_string()))?;
+        Ok(Self {map})
     }
 }

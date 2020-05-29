@@ -8,3 +8,7 @@ authors = ["Sunjay Varma <varma.sunjay@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+tiled = "0.9"
+specs = {version = "0.16", features = ["specs-derive"]}
+thiserror = "1.0"
+sdl2 = "0.34"
