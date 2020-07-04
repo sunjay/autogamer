@@ -1,0 +1,25 @@
+{
+    "layout": "grid",
+    "tile_width": 70,
+    "tile_height": 96,
+    "poses": {
+        "idle": {"row": 0, "col": 0},
+        "jump_midair": {"row": 0, "col": 1},
+        "fall_midair": {"row": 0, "col": 2},
+        "crouch": {"row": 0, "col": 3},
+        "hurt": {"row": 0, "col": 4},
+        "kick": {"row": 1, "col": 6},
+        "talk": {"row": 2, "col": 0},
+        "slide": {"row": 2, "col": 1},
+        "hang": {"row": 2, "col": 2},
+        "skid": {"row": 2, "col": 3},
+        "back": {"row": 2, "col": 4},
+        "stand": {"row": 2, "col": 5}
+    },
+    "animations": {
+        "walk": [{"row": 1, "col": 0}, {"row": 1, "col": 1}],
+        "climb": [{"row": 0, "col": 5}, {"row": 0, "col": 6}],
+        "cheer": [{"row": 0, "col": 7}, {"row": 0, "col": 8}],
+        "swim": [{"row": 1, "col": 7}, {"row": 1, "col": 8}]
+    }
+}
