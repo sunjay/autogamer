@@ -16,7 +16,7 @@
   * since the camera can't always fit entirely within the boundary: the tiles outside the boundary are not shown
   * if you are within multiple camera boundaries, all objects in all boundaries become visible
   * if you are not within *any* camera boundaries, all objects around you are visible (no boundary checking)
-* objects outside of the current boundary are not added until you enter the boundary (?)
+* objects outside of the current boundary are not added until you enter the boundary and are removed after you leave (?)
 * idea: laser colors each have different timing delays of on/off (no switches)
 * laser switches of the same color are synced
 * laser emitters have a different sprite when off
