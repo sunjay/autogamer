@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.4" tiledversion="1.4.1" orientation="orthogonal" renderorder="right-down" width="214" height="50" tilewidth="70" tileheight="70" infinite="0" nextlayerid="7" nextobjectid="33">
+<map version="1.4" tiledversion="1.4.1" orientation="orthogonal" renderorder="right-down" width="214" height="50" tilewidth="70" tileheight="70" infinite="0" nextlayerid="8" nextobjectid="34">
  <tileset firstgid="1" name="Base" tilewidth="70" tileheight="146" tilecount="172" columns="0">
   <grid orientation="orthogonal" width="1" height="1"/>
   <tile id="172">
@@ -5157,7 +5157,10 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
- <objectgroup id="5" name="markers">
+ <objectgroup id="7" name="game_objects">
+  <object id="33" type="boss" gid="833" x="13930" y="1050" width="66" height="92"/>
+ </objectgroup>
+ <objectgroup id="5" name="markers" visible="0" locked="1">
   <object id="1" name="level_start" type="level_start" x="634" y="2900">
    <point/>
   </object>
@@ -5179,7 +5182,6 @@
   <object id="27" type="boss_movement_zone" x="13300" y="350" width="490" height="70"/>
   <object id="28" type="boss_movement_zone" x="13790" y="490" width="490" height="70"/>
   <object id="29" type="boss_movement_zone" x="12811.5" y="770" width="1470" height="280"/>
-  <object id="30" type="boss" gid="833" x="13930" y="1050" width="66" height="92"/>
   <object id="31" type="transport" x="5495" y="3325">
    <properties>
     <property name="destination" type="int" value="32"/>
