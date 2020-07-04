@@ -5157,36 +5157,36 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
- <objectgroup id="5" name="markers" visible="0" locked="1" offsetx="-141.5" offsety="1">
-  <object id="1" name="level_start" type="level_start" x="774.151" y="2901.73">
+ <objectgroup id="5" name="markers">
+  <object id="1" name="level_start" type="level_start" x="634" y="2900">
    <point/>
   </object>
-  <object id="9" type="transport" x="2555" y="2280">
+  <object id="9" type="transport" x="2415" y="2280">
    <properties>
     <property name="destination" type="int" value="10"/>
    </properties>
    <point/>
   </object>
-  <object id="10" x="2905" y="2280">
+  <object id="10" x="2765" y="2280">
    <point/>
   </object>
-  <object id="14" type="camera_boundary" x="280" y="1680" width="2450" height="1470"/>
-  <object id="18" type="camera_boundary" x="2730" y="1470" width="3150" height="2030"/>
-  <object id="20" type="camera_boundary" x="5880" y="1260" width="910" height="2240"/>
-  <object id="21" type="camera_boundary" x="5880" y="0" width="9030" height="1260"/>
-  <object id="22" type="boss_area" x="12880" y="0" width="1610" height="1120"/>
-  <object id="26" type="boss_movement_zone" x="12950" y="490" width="490" height="70"/>
-  <object id="27" type="boss_movement_zone" x="13440" y="350" width="490" height="70"/>
-  <object id="28" type="boss_movement_zone" x="13930" y="490" width="490" height="70"/>
-  <object id="29" type="boss_movement_zone" x="12951.5" y="770" width="1470" height="280"/>
-  <object id="30" type="boss" gid="833" x="14070" y="1050" width="66" height="92"/>
-  <object id="31" type="transport" x="5635" y="3325">
+  <object id="14" type="camera_boundary" x="140" y="1680" width="2450" height="1470"/>
+  <object id="18" type="camera_boundary" x="2590" y="1470" width="3150" height="2030"/>
+  <object id="20" type="camera_boundary" x="5740" y="1260" width="910" height="2240"/>
+  <object id="21" type="camera_boundary" x="5740" y="0" width="9030" height="1260"/>
+  <object id="22" type="boss_area" x="12740" y="0" width="1610" height="1120"/>
+  <object id="26" type="boss_movement_zone" x="12810" y="490" width="490" height="70"/>
+  <object id="27" type="boss_movement_zone" x="13300" y="350" width="490" height="70"/>
+  <object id="28" type="boss_movement_zone" x="13790" y="490" width="490" height="70"/>
+  <object id="29" type="boss_movement_zone" x="12811.5" y="770" width="1470" height="280"/>
+  <object id="30" type="boss" gid="833" x="13930" y="1050" width="66" height="92"/>
+  <object id="31" type="transport" x="5495" y="3325">
    <properties>
     <property name="destination" type="int" value="32"/>
    </properties>
    <point/>
   </object>
-  <object id="32" x="6265" y="3325">
+  <object id="32" x="6125" y="3325">
    <point/>
   </object>
  </objectgroup>
