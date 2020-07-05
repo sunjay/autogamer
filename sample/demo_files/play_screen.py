@@ -29,17 +29,5 @@ class PlayScreen(LevelScreen):
             height=level1_map.tile_height() * 12,
         )
 
-        hud = HeadsUpDisplay()
-        self.level.add(hud)
-        hud.add(HealthBar())
-
-        menu = Menu()
-        hud.add(menu)
-
-        pause_menu = Menu()
-        self.level.on_key_pressed("p", lambda: pause_menu.show())
-
-        # To move to the next level
-        health = player.get(Health)
-        level2_player = level2.player()
-        level2_player.add(health)
+        #TODO: Configure HUD and menu
+        #TODO: Configure pause menu keyboard shortcut
