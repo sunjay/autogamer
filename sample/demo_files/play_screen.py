@@ -21,7 +21,7 @@ class PlayScreen(LevelScreen):
             right_velocity=10.0,
             jump_velocity=20.0,
         ))
-        player.add(Health(100))
+        player.add(Health(6))
         player.add(ViewportTarget())
 
         self.level.viewport(
