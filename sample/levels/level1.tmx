@@ -5208,10 +5208,10 @@
   <object id="10" x="2765" y="2280">
    <point/>
   </object>
-  <object id="14" type="camera_boundary" x="140" y="1680" width="2450" height="1470"/>
-  <object id="18" type="camera_boundary" x="2590" y="1470" width="3150" height="2030"/>
-  <object id="20" type="camera_boundary" x="5740" y="1260" width="910" height="2240"/>
-  <object id="21" type="camera_boundary" x="5740" y="0" width="9030" height="1260"/>
+  <object id="14" type="viewport_boundary" x="140" y="1680" width="2450" height="1470"/>
+  <object id="18" type="viewport_boundary" x="2590" y="1470" width="3150" height="2030"/>
+  <object id="20" type="viewport_boundary" x="5740" y="1260" width="910" height="2240"/>
+  <object id="21" type="viewport_boundary" x="5740" y="0" width="9030" height="1260"/>
   <object id="22" type="boss_area" x="12740" y="0" width="1610" height="1120"/>
   <object id="26" type="boss_movement_zone" x="12810" y="490" width="490" height="70"/>
   <object id="27" type="boss_movement_zone" x="13300" y="350" width="490" height="70"/>
