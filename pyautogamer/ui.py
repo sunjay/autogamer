@@ -1,10 +1,10 @@
 from . import Level
 
-class Align:
+class Anchor:
     """
     Defines how a widget should be aligned with its position.
 
-    Example: Align.N specifies that the top middle point of the widget rectangle
+    Example: Anchor.N specifies that the top middle point of the widget rectangle
     will be equal to the widget position.
     """
 
@@ -31,10 +31,10 @@ class Screen:
     def __init__(self, game):
         self.game = game
 
-    def update(self):
+    def update(self, events):
         pass
 
-    def render(self):
+    def draw(self, renderer):
         pass
 
 class LevelScreen(Screen):
@@ -42,30 +42,48 @@ class LevelScreen(Screen):
         super().__init__(game)
 
         self.level = Level()
+        self.hud = None
 
-class Widget:
-    def __init__(self, *, x=0, y=0, width=1, height=1, align=Align.CENTER):
+    def update(self, events):
+        self.level.update(events)
+        if self.hud is not None:
+            self.hud.update(events)
+
+    def draw(self, renderer):
+        self.level.draw(renderer)
+        if self.hud is not None:
+            self.hud.draw(renderer)
+
+class Text:
+    def __init__(self, renderer, content):
+        self.renderer = renderer
+        self.content = content
+        self.width = None
+        self.height = None
+
+    def measure(self):
+        #TODO: Cache the text in the renderer as a texture and return the
+        # dimensions of the text
+        #TODO: Cache the dimensions in self.width and self.height
+        return (200, 40)
+
+    @property
+    def width(self):
+        self.measure()
+        return self.width
+
+    @property
+    def height(self):
+        self.measure()
+        return self.height
+
+class Rect:
+    def __init__(self, x, y, width, height):
         self.x = x
         self.y = y
         self.width = width
         self.height = height
-        self.align = align
 
-    def draw(self):
+    @staticmethod
+    def from_center(center_x, center_y, width, height):
         pass
-
-    def destroy(self):
-        pass
-
-class Button(Widget):
-    def __init__(self, text, *, onclick, **kwargs):
-        super().__init__(**kwargs)
-
-        self.text = text
-        self.onclick = onclick
-
-class Text(Widget):
-    def __init__(self, text, **kwargs):
-        super().__init__(**kwargs)
-
-        self.text = text
