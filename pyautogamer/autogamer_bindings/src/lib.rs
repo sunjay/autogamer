@@ -38,9 +38,6 @@ impl Game {
     fn load(&mut self, map: &TileMap) {
     }
 
-    fn fullscreen(&self) {
-    }
-
     fn run(&mut self) {
         // loop {
         //     current_level.dispatcher.run();
