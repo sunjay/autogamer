@@ -3,7 +3,7 @@
 from pyautogamer import *
 from pyautogamer.ui import *
 
-from screens.main_menu import MainMenu
+from demo_files.main_menu import MainMenu
 
 def main():
     game = Game(window_width=800, window_height=600)

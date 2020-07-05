@@ -43,7 +43,7 @@ following command:
 ```
 
 This will run `sample/getting-started.py`. If no `--sample` argument is
-provided, the `sample/game.py` script is run.
+provided, the `sample/demo.py` script is run.
 
 [Rust]: https://rustup.rs
 [PyO3]: https://pyo3.rs

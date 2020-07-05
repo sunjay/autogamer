@@ -121,8 +121,8 @@ def parse_args():
     add_build_args(build)
 
     run = subcommands.add_parser("run")
-    run.add_argument("--sample", metavar="SAMPLE", default="game.py",
-        help="filename in `sample/` to run (default: \"game.py\")")
+    run.add_argument("--sample", metavar="SAMPLE", default="demo.py",
+        help="filename in `sample/` to run (default: \"demo.py\")")
     add_build_args(run)
 
     args, unknownargs = parser.parse_known_args()
