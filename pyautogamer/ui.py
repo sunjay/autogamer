@@ -27,6 +27,20 @@ class Anchor:
     # Align center
     CENTER = 8
 
+class EventLoopControl:
+    """
+    Returned from Screen.update to specify when the event loop should rerun that
+    function.
+    """
+
+    # The event loop will wait until the next frame to run Screen.update
+    # This is the default if nothing is returned from Screen.update
+    WAIT_FOR_FRAME = 0
+    # The event loop will immediately rerun Screen.update on the next iteration
+    CONTINUE = 1
+    # The event loop will exit and the window will be closed
+    EXIT = 2
+
 class Screen:
     def __init__(self, game):
         self.game = game
