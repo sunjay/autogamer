@@ -1,4 +1,16 @@
-from . import Level
+from . import autogamer_bindings as ag, Level
+from .autogamer_bindings import *
+
+__all__ = [
+    "Screen",
+    "Anchor",
+    "EventLoopControl",
+    "LevelScreen",
+    "Text",
+    "Rect",
+]
+
+Screen = ag.ui.Screen
 
 class Anchor:
     """
@@ -40,16 +52,6 @@ class EventLoopControl:
     CONTINUE = 1
     # The event loop will exit and the window will be closed
     EXIT = 2
-
-class Screen:
-    def __init__(self, game):
-        self.game = game
-
-    def update(self, events):
-        pass
-
-    def draw(self, renderer):
-        pass
 
 class LevelScreen(Screen):
     def __init__(self, game):

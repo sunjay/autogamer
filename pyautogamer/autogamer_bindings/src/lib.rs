@@ -1,10 +1,13 @@
 use autogamer as ag;
 use pyo3::prelude::*;
+use pyo3::PyTraverseError;
+use pyo3::gc::{PyGCProtocol, PyVisit};
 use pyo3::exceptions::ValueError;
 
 #[pymodule]
 /// Bindings to the autogamer native module
 pub fn autogamer_bindings(_py: Python, pymod: &PyModule) -> PyResult<()> {
+    pymod.add_wrapped(pyo3::wrap_pymodule!(ui))?;
     pymod.add_class::<Game>()?;
     pymod.add_class::<Level>()?;
     pymod.add_class::<Entity>()?;
@@ -12,39 +15,106 @@ pub fn autogamer_bindings(_py: Python, pymod: &PyModule) -> PyResult<()> {
     Ok(())
 }
 
-#[pyclass]
+#[pymodule]
+/// Bindings to the autogamer native UI module
+pub fn ui(_py: Python, pymod: &PyModule) -> PyResult<()> {
+    pymod.add_class::<Screen>()?;
+    Ok(())
+}
+
+#[pyclass(gc)]
 #[derive(Debug)]
 pub struct Game {
+    current_screen: Option<Py<Screen>>
+}
+
+#[pyproto]
+impl PyGCProtocol for Game {
+    fn __traverse__(&self, visit: PyVisit) -> Result<(), PyTraverseError> {
+        let Self {current_screen} = self;
+        visit.call(current_screen)?;
+        Ok(())
+    }
+
+    fn __clear__(&mut self) {
+        let Self {current_screen} = self;
+        // Release reference, this decrements the ref counter
+        let gil = GILGuard::acquire();
+        let py = gil.python();
+        if let Some(current_screen) = current_screen.take() {
+            py.release(&current_screen);
+        }
+    }
 }
 
 #[pymethods]
 impl Game {
     #[new]
-    fn new() -> Self {
-        Self {}
+    pub fn new() -> Self {
+        Self {
+            current_screen: None,
+        }
     }
 
-    /// Adds a new entity to the default level of the game
-    ///
-    /// See the `add_player` method on `Level` for more details.
-    fn add_player(&mut self) -> Entity {
-        todo!()
+    /// Sets the current screen of the game to the given screen
+    pub fn set_screen(&mut self, screen: Py<Screen>) {
+        self.current_screen = Some(screen);
     }
 
-    /// Loads a map into the default level of the game, automatically
-    /// discovering entities and components based on the contents of the map.
-    ///
-    /// See the `add_player` method on `Level` for more details.
-    fn load(&mut self, map: &TileMap) {
-    }
-
-    fn run(&mut self) {
+    /// Runs the game main loop until either the window is closed or the game
+    /// loop is ended by the game itself
+    pub fn run(&mut self) {
+        let current_screen = match self.current_screen.take() {
+            Some(screen) => screen,
+            // No screen configured, quit immediately
+            None => return,
+        };
         // loop {
         //     current_level.dispatcher.run();
         //     current_level.viewport.update();
         //     current_level.map.draw();
         //     current_level.hud.draw();
         // }
+    }
+}
+
+#[pyclass(subclass, gc)]
+#[derive(Debug)]
+pub struct Screen {
+    #[pyo3(get)]
+    game: Py<Game>,
+}
+
+#[pyproto]
+impl PyGCProtocol for Screen {
+    fn __traverse__(&self, visit: PyVisit) -> Result<(), PyTraverseError> {
+        let Self {game} = self;
+        visit.call(game)?;
+        Ok(())
+    }
+
+    fn __clear__(&mut self) {
+        let Self {game} = self;
+        // Release reference, this decrements the ref counter
+        let gil = GILGuard::acquire();
+        let py = gil.python();
+        py.release(&*game);
+    }
+}
+
+#[pymethods]
+impl Screen {
+    #[new]
+    pub fn new(game: Py<Game>) -> Self {
+        Self {game}
+    }
+
+    pub fn update(&mut self, events: i32) {
+        //TODO: Figure out type for `events`
+    }
+
+    pub fn draw(&mut self, renderer: i32) {
+        //TODO: Figure out type for `renderer`
     }
 }
 
