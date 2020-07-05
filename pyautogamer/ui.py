@@ -59,9 +59,16 @@ class LevelScreen(Screen):
         self.hud = None
 
     def update(self, events):
-        self.level.update(events)
+        control = None
         if self.hud is not None:
-            self.hud.update(events)
+            # HUD needs to process events before level so HUD controls can take
+            # precedence
+            control = self.hud.update(events)
+        control2 = self.level.update(events)
+
+        if control2 is not None:
+            return control2
+        return control
 
     def draw(self, renderer):
         self.level.draw(renderer)
