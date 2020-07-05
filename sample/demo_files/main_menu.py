@@ -2,6 +2,8 @@ from pyautogamer.ui import *
 
 from .play_screen import PlayScreen
 
+__all__ = ['MainMenu']
+
 class MainMenu(Screen):
     def update(self, events):
         if start_button_pressed():

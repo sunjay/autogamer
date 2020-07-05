@@ -1,6 +1,8 @@
 from pyautogamer import *
 from pyautogamer.ui import *
 
+__all__ = ['PlayScreen']
+
 class PlayScreen(LevelScreen):
     def __init__(self, game):
         super().__init__(game)
