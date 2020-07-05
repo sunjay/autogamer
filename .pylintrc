@@ -144,6 +144,7 @@ disable=print-statement,
         missing-function-docstring,
         bad-continuation,
         wildcard-import,
+        unused-wildcard-import,
         invalid-name,
         too-few-public-methods
 
