@@ -75,7 +75,7 @@ impl Markers {
 }
 
 #[derive(Debug)]
-pub struct Map {
+pub struct TileMap {
     ncols: u32,
     nrows: u32,
     tile_width: u32,
@@ -83,7 +83,7 @@ pub struct Map {
     background_color: Color,
 }
 
-impl Map {
+impl TileMap {
     pub fn load(path: &str) -> Result<Self, LoadError> {
         let tiled::Map {
             version: _,
