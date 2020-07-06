@@ -4,7 +4,7 @@ use thiserror::Error;
 use sdl2::{pixels::Color, rect::{Point, Rect}};
 use specs::{World, WorldExt};
 
-use crate::{Game, TileMap, Size};
+use crate::{Game, TileMap, Size, Renderer};
 
 #[derive(Debug, Clone, Error)]
 #[error("{0}")]
@@ -102,7 +102,7 @@ impl Level {
         }
     }
 
-    pub fn load(&mut self, map: &TileMap) -> Result<(), Unsupported> {
+    pub fn load(&mut self, map: &TileMap, renderer: &mut Renderer) -> Result<(), Unsupported> {
         let tiled::Map {
             version: _,
             orientation,

@@ -17,6 +17,10 @@ impl Game {
     pub fn inner(&self) -> &ag::Game {
         &self.game
     }
+
+    pub fn inner_mut(&mut self) -> &mut ag::Game {
+        &mut self.game
+    }
 }
 
 #[pyproto]

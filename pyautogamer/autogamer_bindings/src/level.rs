@@ -1,17 +1,51 @@
 use autogamer as ag;
 
 use pyo3::prelude::*;
+use pyo3::PyTraverseError;
+use pyo3::gc::{PyGCProtocol, PyVisit};
 use pyo3::exceptions::ValueError;
 
 use crate::*;
 use crate::ui::*;
 
-#[pyclass(subclass, extends=Screen)]
+#[pyclass(subclass, gc, extends=Screen)]
 #[derive(Debug)]
 pub struct Level {
     level: ag::Level,
+    game: Py<Game>,
     #[pyo3(get)]
     physics: Py<Physics>,
+}
+
+#[pyproto]
+impl PyGCProtocol for Level {
+    fn __traverse__(&self, visit: PyVisit) -> Result<(), PyTraverseError> {
+        let Self {
+            level: _,
+            game,
+            physics,
+        } = self;
+
+        visit.call(game)?;
+        visit.call(physics)?;
+
+        Ok(())
+    }
+
+    fn __clear__(&mut self) {
+        let Self {
+            level: _,
+            game,
+            physics,
+        } = self;
+
+        // Release reference, this decrements the ref counter
+        let gil = GILGuard::acquire();
+        let py = gil.python();
+
+        py.release(&*game);
+        py.release(&*physics);
+    }
 }
 
 #[pymethods]
@@ -22,13 +56,10 @@ impl Level {
         let py = gil.python();
 
         let level = ag::Level::new(game.borrow(py).inner());
-        let base = Screen::new(game);
+        let base = Screen::new(game.clone());
+        let physics = Py::new(py, Physics::new())?;
 
-        let level = Self {
-            level,
-            physics: Py::new(py, Physics::new())?,
-        };
-
+        let level = Self {level, game, physics};
         Ok((level, base))
     }
 
@@ -45,7 +76,12 @@ impl Level {
     /// Loads a map into this level, automatically discovering entities and
     /// components based on the contents of the map.
     pub fn load(&mut self, map: &TileMap) -> PyResult<()> {
-        self.level.load(map.inner())
+        let gil = GILGuard::acquire();
+        let py = gil.python();
+
+        let mut game = self.game.borrow_mut(py);
+
+        self.level.load(map.inner(), game.inner_mut().renderer_mut())
             .map_err(|err| ValueError::py_err(err.to_string()))
     }
 
@@ -53,6 +89,6 @@ impl Level {
     //TODO(PyO3/pyo3#1025): These should be keyword-only arguments with no defaults
     #[args("*", width=1, height=1)]
     pub fn set_viewport_dimensions(&mut self, width: u32, height: u32) {
-        self.level.set_viewport_dimensions(Size {width, height})
+        self.level.set_viewport_dimensions(ag::Size {width, height})
     }
 }
