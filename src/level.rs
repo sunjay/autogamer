@@ -1,5 +1,8 @@
+use std::fmt;
+
 use thiserror::Error;
 use sdl2::{pixels::Color, rect::{Point, Rect}};
+use specs::{World, WorldExt};
 
 use crate::{Game, TileMap, Size};
 
@@ -69,14 +72,27 @@ impl Markers {
     }
 }
 
-#[derive(Debug)]
 pub struct Level {
+    world: World,
     viewport: Rect,
+}
+
+impl fmt::Debug for Level {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let Self {world: _, viewport} = self;
+
+        f.debug_struct("Level")
+            // World doesn't implement Debug
+            .field("world", &"World")
+            .field("viewport", &viewport)
+            .finish()
+    }
 }
 
 impl Level {
     pub fn new(game: &Game) -> Self {
         Self {
+            world: World::new(),
             viewport: Rect::new(
                 0,
                 0,
