@@ -1,5 +1,6 @@
-from . import autogamer_bindings as ag, Level
 from .autogamer_bindings import *
+from .autogamer_bindings.ui import *
+from . import Level
 
 __all__ = [
     "Screen",
@@ -9,8 +10,6 @@ __all__ = [
     "Text",
     "Rect",
 ]
-
-Screen = ag.ui.Screen
 
 class Anchor:
     """

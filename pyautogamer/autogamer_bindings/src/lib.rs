@@ -6,12 +6,18 @@ use pyo3::exceptions::ValueError;
 
 #[pymodule]
 /// Bindings to the autogamer native module
-pub fn autogamer_bindings(_py: Python, pymod: &PyModule) -> PyResult<()> {
+pub fn autogamer_bindings(py: Python, pymod: &PyModule) -> PyResult<()> {
     pymod.add_wrapped(pyo3::wrap_pymodule!(ui))?;
+    py.run("\
+import sys
+sys.modules['autogamer_bindings.ui'] = ui
+    ", None, Some(pymod.dict()))?;
+
     pymod.add_class::<Game>()?;
     pymod.add_class::<Level>()?;
     pymod.add_class::<Entity>()?;
     pymod.add_class::<TileMap>()?;
+
     Ok(())
 }
 
