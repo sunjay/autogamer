@@ -3,8 +3,10 @@ from .components import *
 
 __all__ = [
     "Game",
-    "TileMap",
     "Level",
+    "Physics",
+    "Entity",
+    "TileMap",
 
     # Components
     "Player",
