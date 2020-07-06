@@ -69,34 +69,32 @@ impl Position {
     #[args("*", x="0.0", y="0.0")]
     pub fn new(x: f64, y: f64) -> Self {
         Self {
-            component: ag::Position::from((x, y)),
+            component: ag::Position(ag::Vec2::new(x, y)),
         }
     }
 
     #[getter]
     pub fn x(&self) -> f64 {
-        let (x, _) = self.component.into_f64();
-        x
+        self.component.0.x
     }
 
     //TODO: Should the setter have the side effect of updating this component
     // for a given entity? Maybe this struct should store Option<Entity>
     //#[setter]
     //pub fn set_x(&mut self, x: f64) {
-    //    self.component.set_x(x);
+    //    self.component.0.x = x;
     //}
 
     #[getter]
     pub fn y(&self) -> f64 {
-        let (_, y) = self.component.into_f64();
-        y
+        self.component.0.y
     }
 
     //TODO: Should the setter have the side effect of updating this component
     // for a given entity? Maybe this struct should store Option<Entity>
     //#[setter]
     //pub fn set_y(&mut self, y: f64) {
-    //    self.component.set_y(y);
+    //    self.component.0.y = y;
     //}
 }
 

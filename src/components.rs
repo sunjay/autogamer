@@ -1,37 +1,11 @@
-use sdl2::rect::Point;
 use specs::{Component, VecStorage, HashMapStorage};
 
-//TODO: Use nalgebra and define a math module
-pub type Vec2d = Point;
+use crate::Vec2;
 
 /// The position of an entity in world coordinates
 #[derive(Component, Debug, Clone, PartialEq)]
 #[storage(VecStorage)]
-pub struct Position(pub Vec2d);
-
-//TODO: Remove this impl after we switch to nalgebra
-impl From<(f64, f64)> for Position {
-    fn from((x, y): (f64, f64)) -> Self {
-        Position(Vec2d::new(x as i32, y as i32))
-    }
-}
-
-//TODO: Remove this impl after we switch to nalgebra
-impl Position {
-    pub fn into_f64(&self) -> (f64, f64) {
-        (self.0.x() as f64, self.0.y() as f64)
-    }
-
-    pub fn set_x(&mut self, x: f64) {
-        let (_, y) = self.into_f64();
-        *self = Self::from((x, y))
-    }
-
-    pub fn set_y(&mut self, y: f64) {
-        let (x, _) = self.into_f64();
-        *self = Self::from((x, y))
-    }
-}
+pub struct Position(pub Vec2);
 
 /// A marker component given to an entity to indicate that it represents one of
 /// the players of the game. This component is automatically added when you call
