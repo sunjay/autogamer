@@ -24,11 +24,11 @@ impl TileMap {
 
     #[getter]
     pub fn tile_width(&self) -> u32 {
-        todo!()
+        self.map.tile_width()
     }
 
     #[getter]
     pub fn tile_height(&self) -> u32 {
-        todo!()
+        self.map.tile_height()
     }
 }

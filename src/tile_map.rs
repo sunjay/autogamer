@@ -14,4 +14,12 @@ impl TileMap {
     pub fn as_map(&self) -> &tiled::Map {
         &self.map
     }
+
+    pub fn tile_width(&self) -> u32 {
+        self.map.tile_width
+    }
+
+    pub fn tile_height(&self) -> u32 {
+        self.map.tile_height
+    }
 }
