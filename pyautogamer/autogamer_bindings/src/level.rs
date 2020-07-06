@@ -1,3 +1,5 @@
+use autogamer as ag;
+
 use pyo3::prelude::*;
 
 use crate::*;
@@ -6,6 +8,7 @@ use crate::ui::*;
 #[pyclass(subclass, extends=Screen)]
 #[derive(Debug)]
 pub struct Level {
+    level: ag::Level,
     #[pyo3(get)]
     physics: Py<Physics>,
 }
@@ -14,12 +17,14 @@ pub struct Level {
 impl Level {
     #[new]
     pub fn new(game: Py<Game>) -> PyResult<(Self, Screen)> {
-        let base = Screen::new(game);
-
         let gil = GILGuard::acquire();
         let py = gil.python();
 
+        let level = ag::Level::new(game.borrow(py).inner());
+        let base = Screen::new(game);
+
         let level = Self {
+            level,
             physics: Py::new(py, Physics::new())?,
         };
 

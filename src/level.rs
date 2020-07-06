@@ -1,7 +1,7 @@
 use thiserror::Error;
-use sdl2::{pixels::Color, rect::Point};
+use sdl2::{pixels::Color, rect::{Point, Rect}};
 
-use crate::TileMap;
+use crate::{Game, TileMap, Size};
 
 #[derive(Debug, Clone, Error)]
 #[error("{0}")]
@@ -71,15 +71,22 @@ impl Markers {
 
 #[derive(Debug)]
 pub struct Level {
-    ncols: u32,
-    nrows: u32,
-    tile_width: u32,
-    tile_height: u32,
-    background_color: Color,
+    viewport: Rect,
 }
 
 impl Level {
-    pub fn load(map: &TileMap) -> Result<Self, Unsupported> {
+    pub fn new(game: &Game) -> Self {
+        Self {
+            viewport: Rect::new(
+                0,
+                0,
+                game.window_width(),
+                game.window_height(),
+            ),
+        }
+    }
+
+    pub fn load(&mut self, map: &TileMap) -> Result<(), Unsupported> {
         let tiled::Map {
             version: _,
             orientation,
@@ -110,6 +117,12 @@ impl Level {
             None => Color::RGBA(0, 0, 0, 0),
         };
 
-        Ok(Self {ncols, nrows, tile_width, tile_height, background_color})
+        Ok(())
+    }
+
+    pub fn set_viewport_dimensions(&mut self, size: Size) {
+        let Size {width, height} = size;
+        self.viewport.set_width(width);
+        self.viewport.set_height(height);
     }
 }

@@ -1,3 +1,5 @@
+use autogamer as ag;
+
 use pyo3::prelude::*;
 use pyo3::PyTraverseError;
 use pyo3::gc::{PyGCProtocol, PyVisit};
@@ -7,17 +9,21 @@ use crate::*;
 #[pyclass(gc)]
 #[derive(Debug)]
 pub struct Game {
-    window_width: u32,
-    window_height: u32,
+    game: ag::Game,
     current_screen: Option<Py<Screen>>
+}
+
+impl Game {
+    pub fn inner(&self) -> &ag::Game {
+        &self.game
+    }
 }
 
 #[pyproto]
 impl PyGCProtocol for Game {
     fn __traverse__(&self, visit: PyVisit) -> Result<(), PyTraverseError> {
         let Self {
-            window_width: _,
-            window_height: _,
+            game: _,
             current_screen,
         } = self;
 
@@ -30,8 +36,7 @@ impl PyGCProtocol for Game {
 
     fn __clear__(&mut self) {
         let Self {
-            window_width: _,
-            window_height: _,
+            game: _,
             current_screen,
         } = self;
 
@@ -58,8 +63,10 @@ impl Game {
         window_height: u32,
     ) -> Self {
         Self {
-            window_width,
-            window_height,
+            game: ag::Game::new(ag::Size {
+                width: window_width,
+                height: window_height,
+            }),
             current_screen: None,
         }
     }
