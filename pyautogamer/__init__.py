@@ -1,5 +1,4 @@
 from .autogamer_bindings import *
-from .components import *
 
 __all__ = [
     "Game",
@@ -10,6 +9,7 @@ __all__ = [
 
     # Components
     "Player",
+    "Position",
     "PlatformerControls",
     "Health",
     "ViewportTarget",

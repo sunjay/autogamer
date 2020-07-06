@@ -1,5 +1,8 @@
+#![deny(unused_must_use)]
+
 mod entity;
 mod game;
+mod components;
 mod level;
 mod physics;
 mod ui;
@@ -7,6 +10,7 @@ mod tile_map;
 
 use entity::*;
 use game::*;
+use components::*;
 use level::*;
 use physics::*;
 use ui::*;
@@ -24,6 +28,8 @@ pub fn autogamer_bindings(_py: Python, pymod: &PyModule) -> PyResult<()> {
     pymod.add_class::<Physics>()?;
     pymod.add_class::<Entity>()?;
     pymod.add_class::<TileMap>()?;
+
+    add_components(pymod)?;
 
     Ok(())
 }

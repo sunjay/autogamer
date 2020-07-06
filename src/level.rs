@@ -105,6 +105,10 @@ impl Level {
         }
     }
 
+    pub fn world_mut(&mut self) -> &mut World {
+        &mut self.world
+    }
+
     pub fn load(&mut self, map: &TileMap, renderer: &mut Renderer) -> Result<(), Unsupported> {
         let tiled::Map {
             version: _,
