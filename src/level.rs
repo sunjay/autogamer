@@ -2,7 +2,7 @@ use std::fmt;
 
 use thiserror::Error;
 use sdl2::{pixels::Color, rect::{Point, Rect}};
-use specs::{World, WorldExt};
+use specs::{World, WorldExt, Entity};
 
 use crate::{Game, TileMap, Size, Renderer};
 
@@ -75,16 +75,18 @@ impl Markers {
 pub struct Level {
     world: World,
     viewport: Rect,
+    level_start: Option<Point>,
 }
 
 impl fmt::Debug for Level {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let Self {world: _, viewport} = self;
+        let Self {world: _, viewport, level_start} = self;
 
         f.debug_struct("Level")
             // World doesn't implement Debug
             .field("world", &"World")
             .field("viewport", &viewport)
+            .field("level_start", &level_start)
             .finish()
     }
 }
@@ -99,6 +101,7 @@ impl Level {
                 game.window_width(),
                 game.window_height(),
             ),
+            level_start: None,
         }
     }
 
@@ -137,6 +140,11 @@ impl Level {
         // add a Position component. Otherwise just store the position for later
 
         Ok(())
+    }
+
+    pub fn add_player(&mut self) -> Entity {
+        let level_start = self.level_start.unwrap_or_else(|| Point::new(0, 0));
+        todo!()
     }
 
     pub fn set_viewport_dimensions(&mut self, size: Size) {

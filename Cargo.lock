@@ -45,7 +45,9 @@ name = "autogamer_bindings"
 version = "0.1.0"
 dependencies = [
  "autogamer",
+ "parking_lot",
  "pyo3",
+ "specs",
 ]
 
 [[package]]
