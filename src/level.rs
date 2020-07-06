@@ -1,12 +1,7 @@
 use thiserror::Error;
 use sdl2::{pixels::Color, rect::Point};
 
-#[derive(Debug, Error)]
-#[error(transparent)]
-pub enum LoadError {
-    TiledError(#[from] tiled::TiledError),
-    Unsupported(#[from] Unsupported),
-}
+use crate::TileMap;
 
 #[derive(Debug, Clone, Error)]
 #[error("{0}")]
@@ -75,7 +70,7 @@ impl Markers {
 }
 
 #[derive(Debug)]
-pub struct TileMap {
+pub struct Level {
     ncols: u32,
     nrows: u32,
     tile_width: u32,
@@ -83,8 +78,8 @@ pub struct TileMap {
     background_color: Color,
 }
 
-impl TileMap {
-    pub fn load(path: &str) -> Result<Self, LoadError> {
+impl Level {
+    pub fn load(map: &TileMap) -> Result<Self, Unsupported> {
         let tiled::Map {
             version: _,
             orientation,
@@ -92,18 +87,19 @@ impl TileMap {
             height: nrows,
             tile_width,
             tile_height,
-            tilesets,
-            layers,
-            image_layers,
-            object_groups,
+            ref tilesets,
+            ref layers,
+            ref image_layers,
+            ref object_groups,
             properties: _,
             background_colour: background_color,
-        } = tiled::parse_file(path.as_ref())?;
+        } = *map.as_map();
+
         assert_support!(orientation == tiled::Orientation::Orthogonal,
             "only maps with orthogonal orientation are supported");
 
         if !image_layers.is_empty() {
-            println!("Warning: image layers are not supported yet");
+            println!("Warning: image layers are not supported yet and will be ignored");
         }
 
         let markers = Markers::from_object_groups(&object_groups);

@@ -17,7 +17,7 @@ pub struct TileMap {
 impl TileMap {
     #[new]
     pub fn new(path: &str) -> PyResult<Self> {
-        let map = ag::TileMap::load(path)
+        let map = ag::TileMap::open(path)
             .map_err(|err| ValueError::py_err(err.to_string()))?;
         Ok(Self {map})
     }
