@@ -53,6 +53,6 @@ impl Level {
     //TODO(PyO3/pyo3#1025): These should be keyword-only arguments with no defaults
     #[args("*", width=1, height=1)]
     pub fn set_viewport_dimensions(&mut self, width: u32, height: u32) {
-        todo!()
+        self.level.set_viewport_dimensions(Size {width, height})
     }
 }
