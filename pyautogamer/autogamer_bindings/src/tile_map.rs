@@ -13,6 +13,12 @@ pub struct TileMap {
     map: ag::TileMap,
 }
 
+impl TileMap {
+    pub fn inner(&self) -> &ag::TileMap {
+        &self.map
+    }
+}
+
 #[pymethods]
 impl TileMap {
     #[new]

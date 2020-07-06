@@ -117,6 +117,9 @@ impl Level {
             None => Color::RGBA(0, 0, 0, 0),
         };
 
+        //TODO: Check if we have an entity with the Player component, and if so
+        // add a Position component. Otherwise just store the position for later
+
         Ok(())
     }
 

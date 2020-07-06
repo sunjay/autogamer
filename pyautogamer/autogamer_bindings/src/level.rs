@@ -1,6 +1,7 @@
 use autogamer as ag;
 
 use pyo3::prelude::*;
+use pyo3::exceptions::ValueError;
 
 use crate::*;
 use crate::ui::*;
@@ -43,10 +44,9 @@ impl Level {
 
     /// Loads a map into this level, automatically discovering entities and
     /// components based on the contents of the map.
-    pub fn load(&mut self, map: &TileMap) {
-        //TODO: Check if we have an entity with the Player component, and if so
-        // add a Position component. Otherwise just store the position for later
-        todo!()
+    pub fn load(&mut self, map: &TileMap) -> PyResult<()> {
+        self.level.load(map.inner())
+            .map_err(|err| ValueError::py_err(err.to_string()))
     }
 
     /// Sets the dimensions of the viewport to the given values
