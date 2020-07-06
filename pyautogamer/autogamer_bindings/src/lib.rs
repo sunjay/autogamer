@@ -8,10 +8,12 @@ use pyo3::exceptions::ValueError;
 /// Bindings to the autogamer native module
 pub fn autogamer_bindings(_py: Python, pymod: &PyModule) -> PyResult<()> {
     pymod.add_wrapped(pyo3::wrap_pymodule!(ui))?;
+
     pymod.add_class::<Game>()?;
     pymod.add_class::<Level>()?;
     pymod.add_class::<Entity>()?;
     pymod.add_class::<TileMap>()?;
+
     Ok(())
 }
 
@@ -19,6 +21,7 @@ pub fn autogamer_bindings(_py: Python, pymod: &PyModule) -> PyResult<()> {
 /// Bindings to the autogamer native UI module
 pub fn ui(_py: Python, pymod: &PyModule) -> PyResult<()> {
     pymod.add_class::<Screen>()?;
+
     Ok(())
 }
 
@@ -39,7 +42,9 @@ impl PyGCProtocol for Game {
             current_screen,
         } = self;
 
-        visit.call(current_screen)?;
+        if let Some(current_screen) = current_screen {
+            visit.call(current_screen)?;
+        }
 
         Ok(())
     }
@@ -93,6 +98,7 @@ impl Game {
             // No screen configured, quit immediately
             None => return,
         };
+        todo!()
         // loop {
         //     current_level.dispatcher.run();
         //     current_level.viewport.update();
@@ -135,23 +141,54 @@ impl Screen {
 
     pub fn update(&mut self, events: i32) {
         //TODO: Figure out type for `events`
+        todo!()
     }
 
     pub fn draw(&mut self, renderer: i32) {
         //TODO: Figure out type for `renderer`
+        todo!()
     }
 }
 
 #[pyclass]
 #[derive(Debug)]
+pub struct Physics {
+}
+
+#[pymethods]
+impl Physics {
+    #[new]
+    pub fn new() -> Self {
+        Self {}
+    }
+
+    pub fn set_gravity(&mut self, gravity: (f64, f64)) {
+        let (x_gravity, y_gravity) = gravity;
+        todo!()
+    }
+}
+
+#[pyclass(subclass, extends=Screen)]
+#[derive(Debug)]
 pub struct Level {
+    #[pyo3(get)]
+    physics: Py<Physics>,
 }
 
 #[pymethods]
 impl Level {
     #[new]
-    fn new() -> Self {
-        Self {}
+    pub fn new(game: Py<Game>) -> PyResult<(Self, Screen)> {
+        let base = Screen::new(game);
+
+        let gil = GILGuard::acquire();
+        let py = gil.python();
+
+        let level = Self {
+            physics: Py::new(py, Physics::new())?,
+        };
+
+        Ok((level, base))
     }
 
     /// Adds a new entity to this level
@@ -159,28 +196,24 @@ impl Level {
     /// The new entity is given the following components:
     /// * `Player` - indicates that the entity is one of the players of the game
     /// * `Position` - set to `level_start` if that has been defined or (0,0) otherwise
-    fn add_player(&mut self) -> Entity {
+    pub fn add_player(&mut self) -> Entity {
         //TODO: Set position to level start if configured, and (0, 0) otherwise
-        todo!()
+        Entity {}
     }
 
     /// Loads a map into this level, automatically discovering entities and
     /// components based on the contents of the map.
-    fn load(&mut self, map: &TileMap) {
+    pub fn load(&mut self, map: &TileMap) {
         //TODO: Check if we have an entity with the Player component, and if so
         // add a Position component. Otherwise just store the position for later
+        todo!()
     }
 
-    fn fullscreen(&self) {
-    }
-
-    fn run(&mut self) {
-        // loop {
-        //     current_level.dispatcher.run();
-        //     current_level.viewport.update();
-        //     current_level.map.draw();
-        //     current_level.hud.draw();
-        // }
+    /// Sets the dimensions of the viewport to the given values
+    //TODO(PyO3/pyo3#1025): These should be keyword-only arguments with no defaults
+    #[args("*", width=1, height=1)]
+    pub fn set_viewport_dimensions(&mut self, width: u32, height: u32) {
+        todo!()
     }
 }
 
@@ -189,6 +222,13 @@ impl Level {
 #[pyclass]
 #[derive(Debug)]
 pub struct Entity {
+}
+
+#[pymethods]
+impl Entity {
+    pub fn add(&mut self, component: PyObject) {
+        todo!()
+    }
 }
 
 /// Represents the raw data in a Tiled TMX file.
@@ -205,9 +245,19 @@ pub struct TileMap {
 #[pymethods]
 impl TileMap {
     #[new]
-    fn new(path: &str) -> PyResult<Self> {
+    pub fn new(path: &str) -> PyResult<Self> {
         let map = ag::TileMap::load(path)
             .map_err(|err| ValueError::py_err(err.to_string()))?;
         Ok(Self {map})
+    }
+
+    #[getter]
+    pub fn tile_width(&self) -> u32 {
+        todo!()
+    }
+
+    #[getter]
+    pub fn tile_height(&self) -> u32 {
+        todo!()
     }
 }

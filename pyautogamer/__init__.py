@@ -10,4 +10,5 @@ __all__ = [
     "Player",
     "PlatformerControls",
     "Health",
+    "ViewportTarget",
 ]

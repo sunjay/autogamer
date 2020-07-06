@@ -54,10 +54,11 @@ class EventLoopControl:
     EXIT = 2
 
 class LevelScreen(Screen):
-    def __init__(self, game):
-        super().__init__(game)
+    def __new__(cls, game):
+        return Screen.__new__(cls, game)
 
-        self.level = Level()
+    def __init__(self, game):
+        self.level = Level(game)
         self.hud = None
 
     def update(self, events):

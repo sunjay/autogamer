@@ -12,7 +12,7 @@ class PlayScreen(LevelScreen):
         self.level.load(level1_map)
 
         # Configure gravity in the physics engine
-        self.level.physics().set_gravity((0.0, -9.81))
+        self.level.physics.set_gravity((0.0, -9.81))
 
         # Add a player to the game
         player = self.level.add_player()
@@ -24,9 +24,9 @@ class PlayScreen(LevelScreen):
         player.add(Health(6))
         player.add(ViewportTarget())
 
-        self.level.viewport(
-            width=level1_map.tile_width() * 16,
-            height=level1_map.tile_height() * 12,
+        self.level.set_viewport_dimensions(
+            width=level1_map.tile_width * 16,
+            height=level1_map.tile_height * 12,
         )
 
         #TODO: Configure HUD and menu
