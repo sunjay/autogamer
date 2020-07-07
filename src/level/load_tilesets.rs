@@ -1,121 +1,62 @@
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::collections::HashMap;
 
 use tiled::Tileset;
 
-use crate::{Size, Vec2};
+use crate::{Size, Vec2, Tile, Image, CollisionGeometry, Shape, Align};
 
-use super::{TId, LoadError};
+use super::{TileId, LoadError, resolve_image_path};
 
-/// Defines how a tile image is aligned within the tile
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Align {
-    TopLeft,
-    Top,
-    TopRight,
-    Left,
-    Center,
-    Right,
-    BottomLeft,
-    Bottom,
-    BottomRight,
-}
+fn object_to_collision_geometry(obj: &tiled::Object) -> CollisionGeometry {
+    let tiled::Object {
+        id: _,
+        gid: _,
+        name: _,
+        obj_type: _,
+        width: _,
+        height: _,
+        x,
+        y,
+        rotation: _,
+        visible: _,
+        ref shape,
+        properties: _,
+    } = *obj;
 
-impl Default for Align {
-    fn default() -> Self {
-        // See: https://doc.mapeditor.org/en/stable/reference/tmx-map-format/#tileset
-        // This default is only valid in orthogonal mode
-        Align::BottomLeft
-    }
-}
+    let position = Vec2::new(x as f64, y as f64);
+    let shape = match shape {
+        &tiled::ObjectShape::Rect {width, height} => {
+            Shape::Rect {width: width as f64, height: height as f64}
+        },
 
-#[derive(Debug, Clone)]
-pub struct Image {
-    /// The absolute path to this image
-    pub path: PathBuf,
-    /// The size of the image in pixels
-    pub size: Size,
-    /// The alignment of this image within its containing tile
-    pub align: Align,
-}
+        &tiled::ObjectShape::Ellipse {width, height} => {
+            Shape::Ellipse {width: width as f64, height: height as f64}
+        },
 
-#[derive(Debug, Clone)]
-pub enum Shape {
-    Rect {width: f64, height: f64},
-    Ellipse {width: f64, height: f64},
-    Polyline {points: Vec<Vec2>},
-    Polygon {points: Vec<Vec2>},
-}
+        tiled::ObjectShape::Polyline {points} => {
+            Shape::Polyline {
+                points: points.iter().map(|&(x, y)| {
+                    Vec2::new(x as f64, y as f64)
+                }).collect(),
+            }
+        },
 
-#[derive(Debug, Clone)]
-pub struct CollisionGeometry {
-    pub position: Vec2,
-    /// Coordinates in the shape are relative to the position of this geometry
-    pub shape: Shape,
-}
+        tiled::ObjectShape::Polygon {points} => {
+            Shape::Polygon {
+                points: points.iter().map(|&(x, y)| {
+                    Vec2::new(x as f64, y as f64)
+                }).collect(),
+            }
+        },
+    };
 
-impl<'a> From<&'a tiled::Object> for CollisionGeometry {
-    fn from(obj: &'a tiled::Object) -> Self {
-        let tiled::Object {
-            id: _,
-            gid: _,
-            name: _,
-            obj_type: _,
-            width: _,
-            height: _,
-            x,
-            y,
-            rotation: _,
-            visible: _,
-            ref shape,
-            properties: _,
-        } = *obj;
-
-        let position = Vec2::new(x as f64, y as f64);
-        let shape = match shape {
-            &tiled::ObjectShape::Rect {width, height} => {
-                Shape::Rect {width: width as f64, height: height as f64}
-            },
-
-            &tiled::ObjectShape::Ellipse {width, height} => {
-                Shape::Ellipse {width: width as f64, height: height as f64}
-            },
-
-            tiled::ObjectShape::Polyline {points} => {
-                Shape::Polyline {
-                    points: points.iter().map(|&(x, y)| {
-                        Vec2::new(x as f64, y as f64)
-                    }).collect(),
-                }
-            },
-
-            tiled::ObjectShape::Polygon {points} => {
-                Shape::Polygon {
-                    points: points.iter().map(|&(x, y)| {
-                        Vec2::new(x as f64, y as f64)
-                    }).collect(),
-                }
-            },
-        };
-
-        Self {position, shape}
-    }
-}
-
-#[derive(Debug)]
-pub struct Tile {
-    pub id: TId,
-    pub image: Image,
-    /// Any coordinates in the geometry are relative to the position of the tile
-    pub collision_geometry: Vec<CollisionGeometry>,
-    //TODO: inspect tile type field and generate a ComponentTemplate that knows
-    // how to add those components to an entity
+    CollisionGeometry {position, shape}
 }
 
 pub fn load_tilesets(
     base_dir: &Path,
     tilesets: &[Tileset],
-) -> Result<HashMap<TId, Tile>, LoadError> {
+) -> Result<HashMap<TileId, Tile>, LoadError> {
     let mut tiles = HashMap::new();
 
     for tileset in tilesets {
@@ -157,7 +98,7 @@ pub fn load_tilesets(
                 continue;
             }
 
-            let id = TId(*first_gid + *id);
+            let id = TileId(*first_gid + *id);
 
             let &tiled::Image {
                 ref source,
@@ -207,15 +148,4 @@ pub fn load_tilesets(
     }
 
     Ok(tiles)
-}
-
-fn resolve_image_path(base_dir: &Path, image_path: &str) -> Result<PathBuf, LoadError> {
-    let path = Path::new(image_path);
-    let path = if path.is_relative() {
-        base_dir.join(path)
-    } else {
-        path.to_path_buf()
-    };
-
-    Ok(path.canonicalize().map_err(|err| (path.to_path_buf(), err))?)
 }

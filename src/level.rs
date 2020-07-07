@@ -30,7 +30,7 @@ pub struct Unsupported(String);
 
 /// A unique ID for a value retrieved from a tiled map file
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TId(u32);
+pub struct TileId(u32);
 
 macro_rules! assert_support {
     ($cond:expr, $($arg:tt)+) => {
@@ -38,6 +38,17 @@ macro_rules! assert_support {
             Err(Unsupported(format!($($arg)+)))?
         }
     };
+}
+
+fn resolve_image_path(base_dir: &Path, image_path: &str) -> Result<PathBuf, LoadError> {
+    let path = Path::new(image_path);
+    let path = if path.is_relative() {
+        base_dir.join(path)
+    } else {
+        path.to_path_buf()
+    };
+
+    Ok(path.canonicalize().map_err(|err| (path.to_path_buf(), err))?)
 }
 
 pub struct Level {
