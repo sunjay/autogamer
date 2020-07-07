@@ -1,6 +1,22 @@
-use specs::{Component, VecStorage, HashMapStorage};
+use specs::{World, WorldExt, Component, VecStorage, HashMapStorage};
 
 use crate::Vec2;
+
+macro_rules! components {
+    ($($component:ident),* $(,)?) => {
+        pub fn register_components(world: &mut World) {
+            $(world.register::<$component>();)*
+        }
+    };
+}
+
+components! {
+    Position,
+    Player,
+    PlatformerControls,
+    Health,
+    ViewportTarget,
+}
 
 /// The position of an entity in world coordinates
 #[derive(Component, Debug, Clone, PartialEq)]

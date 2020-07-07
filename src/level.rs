@@ -61,8 +61,11 @@ impl fmt::Debug for Level {
 
 impl Level {
     pub fn new(game: &Game) -> Self {
+        let mut world = World::new();
+        crate::register_components(&mut world);
+
         Self {
-            world: World::new(),
+            world,
             viewport: Rect::new(
                 0,
                 0,
