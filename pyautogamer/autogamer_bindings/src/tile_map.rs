@@ -1,3 +1,5 @@
+use std::path::{Path, PathBuf};
+
 use autogamer as ag;
 use pyo3::prelude::*;
 use pyo3::exceptions::ValueError;
@@ -10,10 +12,15 @@ use pyo3::exceptions::ValueError;
 #[pyclass]
 #[derive(Debug)]
 pub struct TileMap {
+    base_dir: PathBuf,
     map: ag::TileMap,
 }
 
 impl TileMap {
+    pub fn base_dir(&self) -> &Path {
+        &self.base_dir
+    }
+
     pub fn inner(&self) -> &ag::TileMap {
         &self.map
     }
@@ -23,9 +30,15 @@ impl TileMap {
 impl TileMap {
     #[new]
     pub fn new(path: &str) -> PyResult<Self> {
+        let path: &Path = path.as_ref();
+        let base_dir = path.parent()
+            .ok_or_else(|| ValueError::py_err("Path to tiled map file did not have a valid parent directory"))?
+            .to_path_buf();
+
         let map = ag::TileMap::open(path)
             .map_err(|err| ValueError::py_err(err.to_string()))?;
-        Ok(Self {map})
+
+        Ok(Self {base_dir, map})
     }
 
     #[getter]

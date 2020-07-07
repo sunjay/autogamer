@@ -1,4 +1,8 @@
+mod load_tilesets;
+
 use std::fmt;
+use std::io;
+use std::path::{Path, PathBuf};
 
 use thiserror::Error;
 use sdl2::{pixels::Color, rect::{Point, Rect}};
@@ -6,9 +10,27 @@ use specs::{World, WorldExt, Entity};
 
 use crate::{Game, TileMap, Size, Renderer};
 
+#[derive(Debug, Error)]
+#[error(transparent)]
+pub enum LoadError {
+    #[error("Error with path `{0}`: {1}")]
+    IOError(PathBuf, io::Error),
+    Unsupported(#[from] Unsupported),
+}
+
+impl From<(PathBuf, io::Error)> for LoadError {
+    fn from((path, err): (PathBuf, io::Error)) -> Self {
+        LoadError::IOError(path, err)
+    }
+}
+
 #[derive(Debug, Clone, Error)]
 #[error("{0}")]
 pub struct Unsupported(String);
+
+/// A unique ID for a value retrieved from a tiled map file
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct TId(u32);
 
 macro_rules! assert_support {
     ($cond:expr, $($arg:tt)+) => {
@@ -16,60 +38,6 @@ macro_rules! assert_support {
             Err(Unsupported(format!($($arg)+)))?
         }
     };
-}
-
-#[derive(Debug)]
-struct Markers {
-    level_start: Option<Point>,
-}
-
-impl Markers {
-    pub fn from_object_groups(groups: &[tiled::ObjectGroup]) -> Self {
-        let mut level_start = None;
-
-        for group in groups {
-            let tiled::ObjectGroup {
-                name,
-                opacity: _,
-                visible: _,
-                objects,
-                colour: _,
-                layer_index: _,
-                properties: _,
-            } = group;
-
-            if name != "markers" {
-                continue;
-            }
-
-            for obj in objects {
-                let tiled::Object {
-                    id: _,
-                    gid: _,
-                    name,
-                    obj_type: _,
-                    width: _,
-                    height: _,
-                    x,
-                    y,
-                    rotation: _,
-                    visible: _,
-                    shape,
-                    properties: _,
-                } = obj;
-
-                let point_shape = tiled::ObjectShape::Rect {width: 0.0, height: 0.0};
-                if name == "level_start" && *shape == point_shape {
-                    if level_start.is_some() {
-                        println!("Warning: multiple `level_start` markers defined");
-                    }
-                    level_start = Some(Point::new(*x as i32, *y as i32));
-                }
-            }
-        }
-
-        Self {level_start}
-    }
 }
 
 pub struct Level {
@@ -109,7 +77,12 @@ impl Level {
         &mut self.world
     }
 
-    pub fn load(&mut self, map: &TileMap, renderer: &mut Renderer) -> Result<(), Unsupported> {
+    pub fn load(
+        &mut self,
+        base_dir: &Path,
+        map: &TileMap,
+        renderer: &mut Renderer,
+    ) -> Result<(), LoadError> {
         let tiled::Map {
             version: _,
             orientation,
@@ -132,13 +105,15 @@ impl Level {
             println!("Warning: image layers are not supported yet and will be ignored");
         }
 
-        let markers = Markers::from_object_groups(&object_groups);
-        dbg!(markers);
-
         let background_color = match background_color {
             Some(tiled::Colour {red, green, blue}) => Color {r: red, g: green, b: blue, a: 255},
             None => Color::RGBA(0, 0, 0, 0),
         };
+
+        let tiles = load_tilesets::load_tilesets(
+            base_dir,
+            tilesets,
+        )?;
 
         //TODO: Check if we have an entity with the Player component, and if so
         // add a Position component. Otherwise just store the position for later

@@ -86,8 +86,11 @@ impl Level {
 
         let mut game = self.game.borrow_mut(py);
 
-        self.level.lock().load(map.inner(), game.inner_mut().renderer_mut())
-            .map_err(|err| ValueError::py_err(err.to_string()))
+        self.level.lock().load(
+            map.base_dir(),
+            map.inner(),
+            game.inner_mut().renderer_mut(),
+        ).map_err(|err| ValueError::py_err(err.to_string()))
     }
 
     /// Sets the dimensions of the viewport to the given values
