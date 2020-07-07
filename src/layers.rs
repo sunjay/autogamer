@@ -58,3 +58,39 @@ pub struct Tile {
     //TODO: inspect tile type field and generate a ComponentTemplate that knows
     // how to add those components to an entity
 }
+
+#[derive(Debug, Default)]
+pub struct ExtraLayers {
+    /// The layers that should be drawn in front of the map layer, in drawing
+    /// order (back to front)
+    ///
+    /// These layers appear above the map layer in Tiled.
+    pub front_layers: Vec<TileLayer>,
+    /// The layers that should be drawn behind the map layer, in drawing
+    /// order (back to front)
+    ///
+    /// These layers appear below the map layer in Tiled.
+    pub back_layers: Vec<TileLayer>,
+}
+
+#[derive(Debug)]
+pub struct TileLayerItem {
+    pub tile_id: TileId,
+    pub flip_horizontal: bool,
+    pub flip_vertical: bool,
+    pub flip_diagonal: bool,
+}
+
+#[derive(Debug)]
+pub struct TileLayer {
+    /// The offset of all tiles in this layer
+    pub offset: Vec2,
+    /// The number of rows in the grid of tiles
+    pub nrows: usize,
+    /// The number of columns in the grid of tiles
+    pub ncols: usize,
+    /// The tiles in the layer, stored row-wise
+    ///
+    /// The length of this must be less than or equal to nrows * ncols
+    pub tiles: Vec<TileLayerItem>,
+}

@@ -133,7 +133,7 @@ pub fn load_tilesets(
                     properties: _,
                 } = objectgroup;
 
-                objects.iter().map(|object| object.into()).collect()
+                objects.iter().map(object_to_collision_geometry).collect()
             }).unwrap_or_default();
 
             let tile = Tile {

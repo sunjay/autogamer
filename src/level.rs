@@ -1,4 +1,5 @@
 mod load_tilesets;
+mod load_layers;
 
 use std::fmt;
 use std::io;
@@ -8,7 +9,10 @@ use thiserror::Error;
 use sdl2::{pixels::Color, rect::Rect};
 use specs::{World, WorldExt, Entity, Builder};
 
-use crate::{Game, TileMap, Size, Renderer, Player, Position, Vec2};
+use crate::{Game, TileMap, Size, Renderer, Player, Position, Vec2, ExtraLayers};
+
+use load_tilesets::load_tilesets;
+use load_layers::load_layers;
 
 #[derive(Debug, Error)]
 #[error(transparent)]
@@ -55,17 +59,24 @@ pub struct Level {
     world: World,
     viewport: Rect,
     level_start: Option<Vec2>,
+    extra_layers: ExtraLayers,
 }
 
 impl fmt::Debug for Level {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let Self {world: _, viewport, level_start} = self;
+        let Self {
+            world: _,
+            viewport,
+            level_start,
+            extra_layers,
+        } = self;
 
         f.debug_struct("Level")
             // World doesn't implement Debug
             .field("world", &"World")
             .field("viewport", &viewport)
             .field("level_start", &level_start)
+            .field("extra_layers", &extra_layers)
             .finish()
     }
 }
@@ -84,6 +95,7 @@ impl Level {
                 game.window_height(),
             ),
             level_start: None,
+            extra_layers: ExtraLayers::default(),
         }
     }
 
@@ -97,6 +109,13 @@ impl Level {
         map: &TileMap,
         renderer: &mut Renderer,
     ) -> Result<(), LoadError> {
+        let Self {
+            world,
+            viewport,
+            level_start,
+            extra_layers,
+        } = self;
+
         let tiled::Map {
             version: _,
             orientation,
@@ -125,13 +144,12 @@ impl Level {
         };
         renderer.set_background_color(background_color);
 
-        let tiles = load_tilesets::load_tilesets(
-            base_dir,
-            tilesets,
-        )?;
+        let tiles = load_tilesets(base_dir, tilesets)?;
+        load_layers(nrows, ncols, layers, world, extra_layers);
 
+        //TODO: Store the level_start position
         //TODO: Check if we have an entity with the Player component, and if so
-        // add a Position component. Otherwise just store the position for later
+        // add a Position component.
 
         Ok(())
     }
