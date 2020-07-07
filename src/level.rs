@@ -17,6 +17,8 @@ use load_layers::load_layers;
 #[derive(Debug, Error)]
 #[error(transparent)]
 pub enum LoadError {
+    #[error("Level.load() may only be called once")]
+    MultipleLoads,
     #[error("Error with path `{0}`: {1}")]
     IOError(PathBuf, io::Error),
     Unsupported(#[from] Unsupported),
@@ -60,6 +62,8 @@ pub struct Level {
     viewport: Rect,
     level_start: Option<Vec2>,
     extra_layers: ExtraLayers,
+    /// True if load() has completed successfully
+    loaded: bool,
 }
 
 impl fmt::Debug for Level {
@@ -69,6 +73,7 @@ impl fmt::Debug for Level {
             viewport,
             level_start,
             extra_layers,
+            loaded,
         } = self;
 
         f.debug_struct("Level")
@@ -77,6 +82,7 @@ impl fmt::Debug for Level {
             .field("viewport", &viewport)
             .field("level_start", &level_start)
             .field("extra_layers", &extra_layers)
+            .field("loaded", &loaded)
             .finish()
     }
 }
@@ -96,6 +102,7 @@ impl Level {
             ),
             level_start: None,
             extra_layers: ExtraLayers::default(),
+            loaded: false,
         }
     }
 
@@ -111,10 +118,15 @@ impl Level {
     ) -> Result<(), LoadError> {
         let Self {
             world,
-            viewport,
-            level_start,
+            viewport: _,
+            level_start: _,
             extra_layers,
+            loaded,
         } = self;
+
+        if *loaded {
+            return Err(LoadError::MultipleLoads);
+        }
 
         let tiled::Map {
             version: _,
@@ -150,6 +162,8 @@ impl Level {
         //TODO: Store the level_start position
         //TODO: Check if we have an entity with the Player component, and if so
         // add a Position component.
+
+        *loaded = true;
 
         Ok(())
     }
