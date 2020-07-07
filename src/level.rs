@@ -112,6 +112,7 @@ impl Level {
             Some(tiled::Colour {red, green, blue}) => Color {r: red, g: green, b: blue, a: 255},
             None => Color::RGBA(0, 0, 0, 0),
         };
+        renderer.set_background_color(background_color);
 
         let tiles = load_tilesets::load_tilesets(
             base_dir,
