@@ -120,7 +120,7 @@ pub fn load_tilesets(
 
     for tileset in tilesets {
         let Tileset {
-            first_gid: _,
+            first_gid,
             name,
             tile_width: _,
             tile_height: _,
@@ -157,7 +157,7 @@ pub fn load_tilesets(
                 continue;
             }
 
-            let id = TId(*id);
+            let id = TId(*first_gid + *id);
 
             let &tiled::Image {
                 ref source,
