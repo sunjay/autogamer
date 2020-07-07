@@ -61,6 +61,7 @@ pub struct Level {
     world: World,
     viewport: Rect,
     level_start: Option<Vec2>,
+    tile_size: Size,
     extra_layers: ExtraLayers,
     /// True if load() has completed successfully
     loaded: bool,
@@ -72,6 +73,7 @@ impl fmt::Debug for Level {
             world: _,
             viewport,
             level_start,
+            tile_size,
             extra_layers,
             loaded,
         } = self;
@@ -81,6 +83,7 @@ impl fmt::Debug for Level {
             .field("world", &"World")
             .field("viewport", &viewport)
             .field("level_start", &level_start)
+            .field("tile_size", &tile_size)
             .field("extra_layers", &extra_layers)
             .field("loaded", &loaded)
             .finish()
@@ -101,6 +104,7 @@ impl Level {
                 game.window_height(),
             ),
             level_start: None,
+            tile_size: Size {width: 1, height: 1},
             extra_layers: ExtraLayers::default(),
             loaded: false,
         }
@@ -121,6 +125,7 @@ impl Level {
             viewport: _,
             level_start: _,
             extra_layers,
+            tile_size,
             loaded,
         } = self;
 
@@ -155,6 +160,9 @@ impl Level {
             None => Color::RGBA(0, 0, 0, 0),
         };
         renderer.set_background_color(background_color);
+
+        tile_size.width = tile_width;
+        tile_size.height = tile_height;
 
         let tiles = load_tilesets(base_dir, tilesets)?;
         load_layers(nrows, ncols, layers, world, extra_layers);
