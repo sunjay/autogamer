@@ -59,20 +59,6 @@ pub struct Tile {
     // how to add those components to an entity
 }
 
-#[derive(Debug, Default)]
-pub struct ExtraLayers {
-    /// The layers that should be drawn in front of the map layer, in drawing
-    /// order (back to front)
-    ///
-    /// These layers appear above the map layer in Tiled.
-    pub front_layers: Vec<TileLayer>,
-    /// The layers that should be drawn behind the map layer, in drawing
-    /// order (back to front)
-    ///
-    /// These layers appear below the map layer in Tiled.
-    pub back_layers: Vec<TileLayer>,
-}
-
 #[derive(Debug)]
 pub struct TileLayerItem {
     pub tile_id: TileId,
@@ -92,5 +78,21 @@ pub struct TileLayer {
     /// The tiles in the layer, stored row-wise
     ///
     /// The length of this must be less than or equal to nrows * ncols
-    pub tiles: Vec<TileLayerItem>,
+    pub tiles: Vec<Option<TileLayerItem>>,
+    /// The opacity at which all tiles in this layer will be rendered
+    pub opacity: f64,
+}
+
+#[derive(Debug, Default)]
+pub struct ExtraLayers {
+    /// The layers that should be drawn in front of the map layer, in drawing
+    /// order (back to front)
+    ///
+    /// These layers appear above the map layer in Tiled.
+    pub front_layers: Vec<TileLayer>,
+    /// The layers that should be drawn behind the map layer, in drawing
+    /// order (back to front)
+    ///
+    /// These layers appear below the map layer in Tiled.
+    pub back_layers: Vec<TileLayer>,
 }
