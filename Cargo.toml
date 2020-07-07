@@ -12,4 +12,4 @@ tiled = "0.9"
 specs = {version = "0.16", features = ["specs-derive"]}
 thiserror = "1.0"
 sdl2 = "0.34"
-nalgebra = "0.21"
+nphysics2d = "0.16"
