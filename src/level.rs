@@ -5,10 +5,10 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use thiserror::Error;
-use sdl2::{pixels::Color, rect::{Point, Rect}};
-use specs::{World, WorldExt, Entity};
+use sdl2::{pixels::Color, rect::Rect};
+use specs::{World, WorldExt, Entity, Builder};
 
-use crate::{Game, TileMap, Size, Renderer};
+use crate::{Game, TileMap, Size, Renderer, Player, Position, Vec2};
 
 #[derive(Debug, Error)]
 #[error(transparent)]
@@ -43,7 +43,7 @@ macro_rules! assert_support {
 pub struct Level {
     world: World,
     viewport: Rect,
-    level_start: Option<Point>,
+    level_start: Option<Vec2>,
 }
 
 impl fmt::Debug for Level {
@@ -125,8 +125,12 @@ impl Level {
     }
 
     pub fn add_player(&mut self) -> Entity {
-        let level_start = self.level_start.unwrap_or_else(|| Point::new(0, 0));
-        todo!()
+        let level_start = self.level_start.unwrap_or_default();
+
+        self.world.create_entity()
+            .with(Player)
+            .with(Position(level_start))
+            .build()
     }
 
     pub fn set_viewport_dimensions(&mut self, size: Size) {
