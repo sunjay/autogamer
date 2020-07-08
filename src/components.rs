@@ -69,3 +69,12 @@ pub struct Health(pub u32);
 #[derive(Component, Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 #[storage(HashMapStorage)]
 pub struct ViewportTarget;
+
+/// If an entity with this component collides with a player, that player will
+/// collect this amount of currency and this entity will be removed
+///
+/// Note that the entity must have some collision geometry in order for
+/// collisions to be detected.
+#[derive(Component, Debug, Clone, PartialEq)]
+#[storage(HashMapStorage)]
+pub struct Currency(pub u32);

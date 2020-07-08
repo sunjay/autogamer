@@ -55,6 +55,13 @@ pub struct Unsupported(String);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TileId(u32);
 
+impl fmt::Display for TileId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let TileId(id) = self;
+        write!(f, "{}", id)
+    }
+}
+
 macro_rules! assert_support {
     ($cond:expr, $($arg:tt)+) => {
         if !$cond {

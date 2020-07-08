@@ -89,8 +89,10 @@ fn load_map_layer(
         };
 
         let Tile {
-            id: _,
+            id,
             image: _,
+            //TODO: Insert collision geometry or a default rectangle geometry
+            // based on the image size if this is empty
             collision_geometry,
             tile_type,
             props,
@@ -98,7 +100,7 @@ fn load_map_layer(
 
         world.create_entity()
             .with(sprite)
-            .apply_templates(tile_type, props)?
+            .apply_templates(*id, tile_type, props)?
             .build();
     }
 
