@@ -164,7 +164,7 @@ impl Level {
         tile_size.width = tile_width;
         tile_size.height = tile_height;
 
-        let tiles = load_tilesets(base_dir, tilesets)?;
+        let tiles = load_tilesets(base_dir, tilesets, renderer)?;
         load_layers(nrows, ncols, layers, &tiles, world, extra_layers);
 
         //TODO: Store the level_start position

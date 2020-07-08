@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 use tiled::Tileset;
 
-use crate::{Size, Vec2, Tile, Image, CollisionGeometry, Shape, Align};
+use crate::{Renderer, Size, Vec2, Tile, TileImage, CollisionGeometry, Shape, Align};
 
 use super::{TileId, LoadError, resolve_image_path};
 
@@ -56,6 +56,7 @@ fn object_to_collision_geometry(obj: &tiled::Object) -> CollisionGeometry {
 pub fn load_tilesets(
     base_dir: &Path,
     tilesets: &[Tileset],
+    renderer: &mut Renderer,
 ) -> Result<HashMap<TileId, Tile>, LoadError> {
     let mut tiles = HashMap::new();
 
@@ -88,7 +89,7 @@ pub fn load_tilesets(
                 images,
                 properties,
                 objectgroup,
-                animation,
+                animation: _,
                 tile_type,
                 probability: _,
             } = tile;
@@ -113,8 +114,10 @@ pub fn load_tilesets(
                 println!("Warning: image `{}` specifies a transparent color which is not supported yet (ignoring transparent color)", image_path.display());
             }
 
-            let image = Image {
-                path: image_path,
+            let image_id = renderer.image_cache_mut().add(image_path);
+
+            let image = TileImage {
+                id: image_id,
                 size: Size {
                     width: width as u32,
                     height: height as u32,

@@ -1,8 +1,11 @@
-use std::path::PathBuf;
+use std::collections::HashMap;
 
-use crate::{Size, Vec2, TileId};
+use crate::{Size, Vec2, TileId, ImageId};
 
-/// Defines how a tile image is aligned within the tile
+/// Defines how a tile image is aligned with respect to its position
+///
+/// For example, an alignment of `BottomLeft` means that the image will be drawn
+/// so that its bottom left corner is at its position.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Align {
     TopLeft,
@@ -25,9 +28,10 @@ impl Default for Align {
 }
 
 #[derive(Debug, Clone)]
-pub struct Image {
-    /// The absolute path to this image
-    pub path: PathBuf,
+pub struct TileImage {
+    /// The ID of the image in the renderer image cache (for quick lookups
+    /// without needing to store the path here)
+    pub id: ImageId,
     /// The size of the image in pixels
     pub size: Size,
     /// The alignment of this image within its containing tile
@@ -52,7 +56,7 @@ pub struct CollisionGeometry {
 #[derive(Debug)]
 pub struct Tile {
     pub id: TileId,
-    pub image: Image,
+    pub image: TileImage,
     /// Any coordinates in the geometry are relative to the position of the tile
     pub collision_geometry: Vec<CollisionGeometry>,
     //TODO: inspect tile type field and generate a ComponentTemplate that knows

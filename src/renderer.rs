@@ -18,6 +18,10 @@ impl Renderer {
         }
     }
 
+    pub fn image_cache_mut(&mut self) -> &mut ImageCache {
+        &mut self.image_cache
+    }
+
     pub fn background_color(&self) -> Color {
         self.background_color
     }
