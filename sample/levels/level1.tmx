@@ -3639,7 +3639,10 @@
   <tile id="49">
    <image width="70" height="70" source="../images/items/snowhill.png"/>
   </tile>
-  <tile id="50">
+  <tile id="50" type="spikes">
+   <properties>
+    <property name="damage" type="int" value="1"/>
+   </properties>
    <image width="70" height="70" source="../images/items/spikes.png"/>
   </tile>
   <tile id="51" type="springboard">
@@ -3734,18 +3737,21 @@
   </tile>
   <tile id="18" type="laser">
    <properties>
+    <property name="damage" type="int" value="1"/>
     <property name="laser_color" value="blue"/>
    </properties>
    <image width="70" height="70" source="../images/lasers/laserBlueBurst.png"/>
   </tile>
   <tile id="19" type="laser">
    <properties>
+    <property name="damage" type="int" value="1"/>
     <property name="laser_color" value="blue"/>
    </properties>
    <image width="70" height="70" source="../images/lasers/laserBlueHorizontal.png"/>
   </tile>
   <tile id="20" type="laser">
    <properties>
+    <property name="damage" type="int" value="1"/>
     <property name="laser_color" value="blue"/>
    </properties>
    <image width="70" height="70" source="../images/lasers/laserBlueVertical.png"/>
@@ -3758,18 +3764,21 @@
   </tile>
   <tile id="23" type="laser">
    <properties>
+    <property name="damage" type="int" value="1"/>
     <property name="laser_color" value="green"/>
    </properties>
    <image width="70" height="70" source="../images/lasers/laserGreenBurst.png"/>
   </tile>
   <tile id="24" type="laser">
    <properties>
+    <property name="damage" type="int" value="1"/>
     <property name="laser_color" value="green"/>
    </properties>
    <image width="70" height="70" source="../images/lasers/laserGreenHorizontal.png"/>
   </tile>
   <tile id="25" type="laser">
    <properties>
+    <property name="damage" type="int" value="1"/>
     <property name="laser_color" value="green"/>
    </properties>
    <image width="70" height="70" source="../images/lasers/laserGreenVertical.png"/>
@@ -3788,18 +3797,21 @@
   </tile>
   <tile id="30" type="laser">
    <properties>
+    <property name="damage" type="int" value="1"/>
     <property name="laser_color" value="red"/>
    </properties>
    <image width="70" height="70" source="../images/lasers/laserRedBurst.png"/>
   </tile>
   <tile id="31" type="laser">
    <properties>
+    <property name="damage" type="int" value="1"/>
     <property name="laser_color" value="red"/>
    </properties>
    <image width="70" height="70" source="../images/lasers/laserRedHorizontal.png"/>
   </tile>
   <tile id="32" type="laser">
    <properties>
+    <property name="damage" type="int" value="1"/>
     <property name="laser_color" value="red"/>
    </properties>
    <image width="70" height="70" source="../images/lasers/laserRedVertical.png"/>
@@ -3874,18 +3886,21 @@
   </tile>
   <tile id="45" type="laser">
    <properties>
+    <property name="damage" type="int" value="1"/>
     <property name="laser_color" value="yellow"/>
    </properties>
    <image width="70" height="70" source="../images/lasers/laserYellowBurst.png"/>
   </tile>
   <tile id="46" type="laser">
    <properties>
+    <property name="damage" type="int" value="1"/>
     <property name="laser_color" value="yellow"/>
    </properties>
    <image width="70" height="70" source="../images/lasers/laserYellowHorizontal.png"/>
   </tile>
   <tile id="47" type="laser">
    <properties>
+    <property name="damage" type="int" value="1"/>
     <property name="laser_color" value="yellow"/>
    </properties>
    <image width="70" height="70" source="../images/lasers/laserYellowVertical.png"/>
