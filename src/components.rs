@@ -17,6 +17,7 @@ components! {
     PlatformerControls,
     Health,
     ViewportTarget,
+    Currency,
 }
 
 /// The position of an entity in world coordinates
