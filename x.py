@@ -101,7 +101,7 @@ def run(app, args, build_args):
         run_command(
             [sys.executable, scriptname],
             cwd="sample",
-            env={"PYTHONPATH": autogamerlib},
+            env={**os.environ, "PYTHONPATH": autogamerlib},
         )
     except subprocess.CalledProcessError:
         print("Command exited with an error")
