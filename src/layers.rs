@@ -56,19 +56,43 @@ pub struct CollisionGeometry {
 #[derive(Debug)]
 pub struct Tile {
     pub id: TileId,
+    /// The image drawn at this tile's position
     pub image: TileImage,
     /// Any coordinates in the geometry are relative to the position of the tile
     pub collision_geometry: Vec<CollisionGeometry>,
-    //TODO: inspect tile type field and generate a ComponentTemplate that knows
-    // how to add those components to an entity
+    /// The type field provided in the tile map (possibly an empty string)
+    pub tile_type: String,
+    /// Any custom properites on the tile itself
+    ///
+    /// These will be merged (and potentially overridden) by custom properties
+    /// on an object containing this tile.
+    pub props: HashMap<String, tiled::PropertyValue>,
 }
 
-#[derive(Debug)]
-pub struct TileLayerItem {
-    pub tile_id: TileId,
+/// An image that can be drawn on the screen
+///
+/// When rendering, the diagonal flip (x/y axis swap) is done first,
+/// followed by the horizontal and vertical flips.
+///
+/// See: https://doc.mapeditor.org/en/stable/reference/tmx-map-format/#tile-flipping
+#[derive(Debug, Clone, PartialEq)]
+pub struct Image {
+    /// The ID of the image in the renderer image cache (for quick lookups
+    /// without needing to store the path here)
+    pub id: ImageId,
+    /// The size in pixels at which to draw the image (can be different from the
+    /// size of the image stored in the image file)
+    pub size: Size,
+    /// The alignment of the image with respect to the position of the entity
+    pub align: Align,
+    /// true if the image should be flipped horizontally
     pub flip_horizontal: bool,
+    /// true if the image should be flipped vertically
     pub flip_vertical: bool,
+    /// true if the image should be flipped along its diagonal
     pub flip_diagonal: bool,
+    /// The opacity with which to draw the image (between 0.0 and 1.0)
+    pub opacity: f64,
 }
 
 #[derive(Debug)]
@@ -80,9 +104,7 @@ pub struct TileLayer {
     /// The number of columns in the grid of tiles
     pub ncols: usize,
     /// The tiles in the layer, stored row-wise
-    pub tiles: Vec<Vec<Option<TileLayerItem>>>,
-    /// The opacity at which all tiles in this layer will be rendered
-    pub opacity: f64,
+    pub tiles: Vec<Vec<Option<Image>>>,
 }
 
 #[derive(Debug, Default)]

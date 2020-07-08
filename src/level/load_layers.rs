@@ -1,10 +1,19 @@
 use std::collections::HashMap;
 
-use specs::{World, WorldExt};
+use specs::{World, WorldExt, Builder};
 
-use crate::{ExtraLayers, Tile, TileLayer, TileLayerItem, Vec2};
+use crate::{
+    ExtraLayers,
+    Tile,
+    TileImage,
+    TileLayer,
+    Vec2,
+    Image,
+    Sprite,
+    ApplyComponentTemplates,
+};
 
-use super::TileId;
+use super::{TILE_DRAW_ORDER, TileId, LoadError};
 
 pub fn load_layers(
     nrows: u32,
@@ -13,7 +22,7 @@ pub fn load_layers(
     tiles: &HashMap<TileId, Tile>,
     world: &mut World,
     extra_layers: &mut ExtraLayers,
-) {
+) -> Result<(), LoadError> {
     let mut prev_layer_index = 0;
     let mut found_map = false;
     for layer in layers {
@@ -39,7 +48,7 @@ pub fn load_layers(
                 continue;
             }
 
-            load_map_layer(layer_tiles, opacity as f64, tiles, world);
+            load_map_layer(layer_tiles, opacity as f64, tiles, world)?;
             found_map = true;
 
         } else {
@@ -48,6 +57,7 @@ pub fn load_layers(
                 opacity as f64,
                 nrows as usize,
                 ncols as usize,
+                tiles,
             );
 
             if found_map {
@@ -57,6 +67,8 @@ pub fn load_layers(
             }
         }
     }
+
+    Ok(())
 }
 
 fn load_map_layer(
@@ -64,12 +76,33 @@ fn load_map_layer(
     opacity: f64,
     tiles: &HashMap<TileId, Tile>,
     world: &mut World,
-) {
+) -> Result<(), LoadError> {
     for tile in layer_tiles.iter().flatten() {
-        let &tiled::LayerTile {gid, flip_h, flip_v, flip_d} = tile;
-        let id = TileId(gid);
-        todo!()
+        let (tile, image) = match process_layer_tile(tiles, tile, opacity) {
+            Some((tile, image)) => (tile, image),
+            None => continue,
+        };
+
+        let sprite = Sprite {
+            image,
+            draw_order: TILE_DRAW_ORDER,
+        };
+
+        let Tile {
+            id: _,
+            image: _,
+            collision_geometry,
+            tile_type,
+            props,
+        } = tile;
+
+        world.create_entity()
+            .with(sprite)
+            .apply_templates(tile_type, props)?
+            .build();
     }
+
+    Ok(())
 }
 
 fn to_extra_layer(
@@ -77,6 +110,7 @@ fn to_extra_layer(
     opacity: f64,
     nrows: usize,
     ncols: usize,
+    tiles: &HashMap<TileId, Tile>,
 ) -> TileLayer {
     //TODO: Use the actual layer offset once we are using a library that
     // actually provides that to us
@@ -89,31 +123,57 @@ fn to_extra_layer(
 
         let mut grid_row = Vec::new();
         for tile in row {
-            let &tiled::LayerTile {
-                gid,
-                flip_h: flip_horizontal,
-                flip_v: flip_vertical,
-                flip_d: flip_diagonal,
-            } = tile;
-
-            // Tiled global IDs always start at 1, so 0 is used to indicate an
-            // empty tile
-            if gid == 0 {
-                grid_row.push(None)
-
-            } else {
-                let tile_id = TileId(gid);
-                grid_row.push(Some(TileLayerItem {
-                    tile_id,
-                    flip_horizontal,
-                    flip_vertical,
-                    flip_diagonal,
-                }));
-            }
+            let image = process_layer_tile(tiles, tile, opacity)
+                .map(|(_, image)| image);
+            grid_row.push(image);
         }
 
         grid_tiles.push(grid_row);
     }
 
-    TileLayer {offset, nrows, ncols, tiles: grid_tiles, opacity}
+    TileLayer {offset, nrows, ncols, tiles: grid_tiles}
+}
+
+/// Looks up a layer tile in the tiles loaded from the tilesets and computes
+/// the complete image with all parameters that should be drawn for this tile.
+///
+/// Returns None if the tile is empty
+fn process_layer_tile<'a>(
+    tiles: &'a HashMap<TileId, Tile>,
+    tile: &tiled::LayerTile,
+    opacity: f64,
+) -> Option<(&'a Tile, Image)> {
+    let &tiled::LayerTile {
+        gid,
+        flip_h: flip_horizontal,
+        flip_v: flip_vertical,
+        flip_d: flip_diagonal,
+    } = tile;
+
+    // Tiled global IDs always start at 1, so 0 is used to indicate an
+    // empty tile
+    if gid == 0 {
+        return None;
+    }
+
+    let id = TileId(gid);
+    let tile = &tiles[&id];
+
+    let TileImage {
+        id: image_id,
+        size,
+        align,
+    } = tile.image;
+
+    let image = Image {
+        id: image_id,
+        size,
+        align,
+        flip_horizontal,
+        flip_vertical,
+        flip_diagonal,
+        opacity,
+    };
+
+    Some((tile, image))
 }

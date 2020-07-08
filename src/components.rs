@@ -1,6 +1,6 @@
 use specs::{World, WorldExt, Component, VecStorage, HashMapStorage};
 
-use crate::Vec2;
+use crate::{Vec2, Image};
 
 macro_rules! components {
     ($($component:ident),* $(,)?) => {
@@ -13,6 +13,7 @@ macro_rules! components {
 components! {
     Position,
     Player,
+    Sprite,
     PlatformerControls,
     Health,
     ViewportTarget,
@@ -29,6 +30,20 @@ pub struct Position(pub Vec2);
 #[derive(Component, Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 #[storage(HashMapStorage)]
 pub struct Player;
+
+/// Defines the image that an entity should be drawn with
+///
+/// The entity must have a Position component so the renderer knows where to
+/// draw its sprite.
+#[derive(Component, Debug, Clone, PartialEq)]
+#[storage(VecStorage)]
+pub struct Sprite {
+    /// The image to draw
+    pub image: Image,
+    /// The order in which the sprite should be drawn. Sprites with a higher
+    /// draw order will be drawn above sprites with a lower draw order.
+    pub draw_order: u8,
+}
 
 /// An entity with this component will respond to arrow key presses by setting
 /// its velocity to the configured values. `left_velocity` and `right_velocity`

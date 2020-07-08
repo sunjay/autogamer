@@ -143,6 +143,8 @@ pub fn load_tilesets(
                 id,
                 image,
                 collision_geometry,
+                tile_type: tile_type.clone().unwrap_or_default(),
+                props: properties.clone(),
             };
 
             assert!(tiles.insert(id, tile).is_none(),

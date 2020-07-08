@@ -9,10 +9,25 @@ use thiserror::Error;
 use sdl2::{pixels::Color, rect::Rect};
 use specs::{World, WorldExt, Entity, Builder};
 
-use crate::{Game, TileMap, Size, Renderer, Player, Position, Vec2, ExtraLayers};
+use crate::{
+    Game,
+    TileMap,
+    Size,
+    Renderer,
+    Player,
+    Position,
+    Vec2,
+    ExtraLayers,
+    TemplateError,
+};
 
 use load_tilesets::load_tilesets;
 use load_layers::load_layers;
+
+/// The draw order value of tiles inserted into the world from the map layer
+const TILE_DRAW_ORDER: u8 = 0;
+/// The draw order value of objects inserted into the world from objects
+const OBJECT_DRAW_ORDER: u8 = 1;
 
 #[derive(Debug, Error)]
 #[error(transparent)]
@@ -21,6 +36,8 @@ pub enum LoadError {
     MultipleLoads,
     #[error("Error with path `{0}`: {1}")]
     IOError(PathBuf, io::Error),
+
+    TemplateError(#[from] TemplateError),
     Unsupported(#[from] Unsupported),
 }
 
@@ -165,7 +182,7 @@ impl Level {
         tile_size.height = tile_height;
 
         let tiles = load_tilesets(base_dir, tilesets, renderer)?;
-        load_layers(nrows, ncols, layers, &tiles, world, extra_layers);
+        load_layers(nrows, ncols, layers, &tiles, world, extra_layers)?;
 
         //TODO: Store the level_start position
         //TODO: Check if we have an entity with the Player component, and if so
