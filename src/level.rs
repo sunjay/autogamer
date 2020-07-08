@@ -87,6 +87,7 @@ pub struct Level {
     level_start: Option<Vec2>,
     tile_size: Size,
     extra_layers: ExtraLayers,
+    background_color: Color,
     /// True if load() has completed successfully
     loaded: bool,
 }
@@ -99,6 +100,7 @@ impl fmt::Debug for Level {
             level_start,
             tile_size,
             extra_layers,
+            background_color,
             loaded,
         } = self;
 
@@ -109,6 +111,7 @@ impl fmt::Debug for Level {
             .field("level_start", &level_start)
             .field("tile_size", &tile_size)
             .field("extra_layers", &extra_layers)
+            .field("background_color", &background_color)
             .field("loaded", &loaded)
             .finish()
     }
@@ -130,6 +133,7 @@ impl Level {
             level_start: None,
             tile_size: Size {width: 1, height: 1},
             extra_layers: ExtraLayers::default(),
+            background_color: Color::BLACK,
             loaded: false,
         }
     }
@@ -150,6 +154,7 @@ impl Level {
             level_start: _,
             extra_layers,
             tile_size,
+            background_color,
             loaded,
         } = self;
 
@@ -169,7 +174,7 @@ impl Level {
             ref image_layers,
             ref object_groups,
             properties: _,
-            background_colour: background_color,
+            background_colour: map_background_color,
         } = *map.as_map();
 
         assert_support!(orientation == tiled::Orientation::Orthogonal,
@@ -179,11 +184,9 @@ impl Level {
             println!("Warning: image layers are not supported yet and will be ignored");
         }
 
-        let background_color = match background_color {
-            Some(tiled::Colour {red, green, blue}) => Color {r: red, g: green, b: blue, a: 255},
-            None => Color::RGBA(0, 0, 0, 0),
-        };
-        renderer.set_background_color(background_color);
+        if let Some(tiled::Colour {red, green, blue}) = map_background_color {
+            *background_color = Color {r: red, g: green, b: blue, a: 255};
+        }
 
         tile_size.width = tile_width;
         tile_size.height = tile_height;
