@@ -1,8 +1,8 @@
 use autogamer as ag;
-
 use pyo3::prelude::*;
 use pyo3::PyTraverseError;
 use pyo3::gc::{PyGCProtocol, PyVisit};
+use pyo3::exceptions::ValueError;
 
 use crate::*;
 
@@ -59,15 +59,17 @@ impl Game {
     #[new]
     #[args(
         "*",
+        title = "\"autogamer\".to_string()",
         window_width = 800,
         window_height = 600,
     )]
     pub fn new(
+        title: String,
         window_width: u32,
         window_height: u32,
     ) -> Self {
         Self {
-            game: ag::Game::new(ag::Size {
+            game: ag::Game::new(title, ag::Size {
                 width: window_width,
                 height: window_height,
             }),
@@ -82,18 +84,24 @@ impl Game {
 
     /// Runs the game main loop until either the window is closed or the game
     /// loop is ended by the game itself
-    pub fn run(&mut self) {
+    pub fn run(&mut self) -> PyResult<()> {
+        let window = self.game.create_window()
+            .map_err(|err| ValueError::py_err(err.to_string()))?;
+
         let current_screen = match self.current_screen.take() {
             Some(screen) => screen,
             // No screen configured, quit immediately
-            None => return,
+            None => return Ok(()),
         };
-        todo!()
-        // loop {
-        //     current_level.dispatcher.run();
-        //     current_level.viewport.update();
-        //     current_level.map.draw();
-        //     current_level.hud.draw();
-        // }
+
+        //loop {
+        //    current_level.dispatcher.run();
+        //    current_level.viewport.update();
+        //    current_level.map.draw();
+        //    current_level.hud.draw();
+        //    //TODO: manage timing
+        //}
+
+        Ok(())
     }
 }

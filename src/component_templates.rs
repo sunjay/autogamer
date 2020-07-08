@@ -129,5 +129,6 @@ pub fn damage<'a, P: GetProperty>(
     tile_type: &str,
     props: &P,
 ) -> Result<EntityBuilder<'a>, TemplateError> {
-    todo!()
+    //TODO
+    Ok(builder)
 }

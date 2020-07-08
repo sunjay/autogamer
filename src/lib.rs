@@ -1,6 +1,7 @@
 #![deny(unused_must_use)]
 
 mod math;
+mod window;
 mod renderer;
 mod game;
 mod physics;
@@ -11,6 +12,7 @@ mod components;
 mod component_templates;
 
 pub use math::*;
+pub use window::*;
 pub use renderer::*;
 pub use game::*;
 pub use physics::*;
