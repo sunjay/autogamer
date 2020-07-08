@@ -76,9 +76,7 @@ pub struct TileLayer {
     /// The number of columns in the grid of tiles
     pub ncols: usize,
     /// The tiles in the layer, stored row-wise
-    ///
-    /// The length of this must be less than or equal to nrows * ncols
-    pub tiles: Vec<Option<TileLayerItem>>,
+    pub tiles: Vec<Vec<Option<TileLayerItem>>>,
     /// The opacity at which all tiles in this layer will be rendered
     pub opacity: f64,
 }
