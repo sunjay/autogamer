@@ -11,5 +11,5 @@ edition = "2018"
 tiled = "0.9"
 specs = {version = "0.16", features = ["specs-derive"]}
 thiserror = "1.0"
-sdl2 = {version = "0.34", features = ["image"]}
+sdl2 = {version = "0.34", features = ["image", "unsafe_textures"]}
 nphysics2d = "0.16"

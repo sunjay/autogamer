@@ -6,7 +6,7 @@ use pyo3::exceptions::ValueError;
 
 use crate::*;
 
-#[pyclass(gc)]
+#[pyclass(gc, unsendable)]
 #[derive(Debug)]
 pub struct Game {
     game: ag::Game,
@@ -87,6 +87,12 @@ impl Game {
     pub fn run(&mut self) -> PyResult<()> {
         let window = self.game.create_window()
             .map_err(|err| ValueError::py_err(err.to_string()))?;
+
+        // Create the texture creator that will load images
+        let texture_creator = window.texture_creator();
+        self.game.renderer_mut()
+            .image_cache_mut()
+            .set_texture_creator(texture_creator);
 
         let current_screen = match self.current_screen.take() {
             Some(screen) => screen,
