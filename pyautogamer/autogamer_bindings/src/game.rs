@@ -145,12 +145,15 @@ impl Game {
                 let gil = GILGuard::acquire();
                 let py = gil.python();
 
-                let mut current_screen = current_screen.borrow_mut(py);
+                let current_screen = current_screen.as_ref(py);
 
-                current_screen.update(0);
+                // Need to use call_method because we want to call the
+                // overridden versions of these methods, not just the methods on
+                // the base Screen class
+                current_screen.call_method1("update", (0,))?;
                 events.clear();
 
-                current_screen.draw(0);
+                current_screen.call_method1("draw", (0,))?;
 
                 last_frame = Instant::now();
 

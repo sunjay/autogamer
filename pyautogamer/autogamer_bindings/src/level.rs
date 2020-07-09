@@ -99,4 +99,12 @@ impl Level {
     pub fn set_viewport_dimensions(&mut self, width: u32, height: u32) {
         self.level.lock().set_viewport_dimensions(ag::Size {width, height})
     }
+
+    //TODO: Figure out type for `events`
+    pub fn update(&mut self, events: i32) {
+    }
+
+    //TODO: Figure out type for `renderer`
+    pub fn draw(&mut self, renderer: i32) {
+    }
 }
