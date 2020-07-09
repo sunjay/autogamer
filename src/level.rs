@@ -302,14 +302,13 @@ impl Level {
 
         for (Position(world_pos), sprite) in (&positions, &sprites).join() {
             let &world_pos = world_pos;
-            let &Sprite {ref image, draw_order} = sprite;
+            let &Sprite {ref image, align_size, draw_order} = sprite;
 
             draw_image(
                 renderer,
                 image,
                 world_pos,
-                //TODO: This should be (0, 0) for tile objects
-                tile_size,
+                align_size,
                 screen_viewport,
                 (scale_x, scale_y),
             )?;

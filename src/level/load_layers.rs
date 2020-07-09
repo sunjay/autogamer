@@ -112,6 +112,7 @@ fn load_map_layer(
 
             let sprite = Sprite {
                 image,
+                align_size: tile_size,
                 draw_order: TILE_DRAW_ORDER,
             };
 

@@ -49,14 +49,14 @@ impl GetProperty for HashMap<String, PropertyValue> {
     }
 }
 
-pub(crate) struct JointHashMap<K, V> {
+pub(crate) struct JointHashMap<'a, K, V> {
     /// The base hashmap, only keys not found in `data` will be looked up here
-    pub base: HashMap<K, V>,
+    pub base: &'a HashMap<K, V>,
     /// The hashmap containing the main data
-    pub data: HashMap<K, V>,
+    pub data: &'a HashMap<K, V>,
 }
 
-impl<K, V> JointHashMap<K, V> where
+impl<'a, K, V> JointHashMap<'a, K, V> where
     K: Eq + Hash,
 {
     pub fn get<Q: ?Sized>(&self, key: &Q) -> Option<&V> where
@@ -67,7 +67,7 @@ impl<K, V> JointHashMap<K, V> where
     }
 }
 
-impl GetProperty for JointHashMap<String, PropertyValue> {
+impl<'a> GetProperty for JointHashMap<'a, String, PropertyValue> {
     fn get_prop(&self, prop: &'static str) -> Option<&PropertyValue> {
         self.get(prop)
     }

@@ -1,11 +1,22 @@
 use std::collections::HashMap;
 use std::convert::TryInto;
 
-use specs::World;
+use specs::{World, WorldExt, Builder};
 
-use crate::{Size, Vec2, Tile, TileImage, Image, ImageParams};
+use crate::{
+    Size,
+    Vec2,
+    Tile,
+    TileImage,
+    Image,
+    ImageParams,
+    Sprite,
+    Position,
+    ApplyComponentTemplates,
+    JointHashMap,
+};
 
-use super::{LoadError, TileId};
+use super::{LoadError, TileId, OBJECT_DRAW_ORDER};
 
 pub fn load_objects(
     object_groups: &[tiled::ObjectGroup],
@@ -26,14 +37,18 @@ pub fn load_objects(
         } = group;
         let opacity = opacity as f64;
 
+        //TODO: Use the actual layer offset once we are using a library that
+        // actually provides that to us
+        let layer_offset = Vec2::default();
+
         for object in objects {
             let &tiled::Object {
                 id,
                 gid,
                 name: _,
                 ref obj_type,
-                width,
-                height,
+                width: _,
+                height: _,
                 x,
                 y,
                 rotation,
@@ -42,18 +57,25 @@ pub fn load_objects(
                 ref properties,
             } = object;
 
+            //TODO: Tiled sometimes uses rotation to simulate flips **instead**
+            // of using the horizontal or vertical flip properties.
+            // (e.g. pressing the horizontal flip button will sometimes result
+            // in rotation = 180 and flip_vertical = true)
             if rotation != 0.0 {
                 println!("Warning: rotation field on objects is not supported yet (ID = {})", id);
             }
 
-            let pos = Vec2::new(x as f64, y as f64);
+            let world_pos = Vec2::new(
+                x as f64 + layer_offset.x,
+                y as f64 + layer_offset.y,
+            );
 
             // Tiled global IDs always start at 1, so 0 is used to indicate that
             // no tile is associated with this object
             if gid == 0 {
                 apply_object_templates(
                     obj_type,
-                    pos,
+                    world_pos,
                     shape,
                     properties,
                     world,
@@ -106,19 +128,21 @@ pub fn load_objects(
                     tile,
                     image,
                     obj_type,
-                    pos,
+                    world_pos,
                     shape,
                     properties,
+                    world,
                 )?;
             }
         }
     }
+
     Ok(())
 }
 
 fn apply_object_templates(
     obj_type: &str,
-    pos: Vec2,
+    world_pos: Vec2,
     shape: &tiled::ObjectShape,
     props: &HashMap<String, tiled::PropertyValue>,
     world: &mut World,
@@ -134,9 +158,49 @@ fn apply_tile_object_templates(
     tile: &Tile,
     image: Image,
     obj_type: &str,
-    pos: Vec2,
+    world_pos: Vec2,
     shape: &tiled::ObjectShape,
-    props: &HashMap<String, tiled::PropertyValue>,
+    obj_props: &HashMap<String, tiled::PropertyValue>,
+    world: &mut World,
 ) -> Result<(), LoadError> {
-    todo!()
+    // Tile object positions are already set with the alignment in mind so we
+    // can get the correct alignment by assuming that we're aligning with a
+    // single point
+    let align_size = Size {width: 0, height: 0};
+
+    let sprite = Sprite {
+        image,
+        align_size,
+        draw_order: OBJECT_DRAW_ORDER,
+    };
+
+    let Tile {
+        id,
+        image: _,
+        //TODO: Insert collision geometry or a default rectangle geometry
+        // based on the object shape if this is empty
+        collision_geometry,
+        tile_type,
+        props: tile_props,
+    } = tile;
+
+    // The type specified on the object overrides the type specified on the tile
+    let obj_tile_type = if obj_type.is_empty() {
+        tile_type
+    } else {
+        obj_type
+    };
+    // Allow object properties to override tile properties
+    let props = JointHashMap {
+        base: tile_props,
+        data: obj_props,
+    };
+
+    world.create_entity()
+        .with(Position(world_pos))
+        .with(sprite)
+        .apply_templates(*id, obj_tile_type, &props)?
+        .build();
+
+    Ok(())
 }

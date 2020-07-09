@@ -1,6 +1,6 @@
 use specs::{World, WorldExt, Component, VecStorage, HashMapStorage};
 
-use crate::{Vec2, Image};
+use crate::{Vec2, Image, Size};
 
 macro_rules! components {
     ($($component:ident),* $(,)?) => {
@@ -41,6 +41,11 @@ pub struct Player;
 pub struct Sprite {
     /// The image to draw
     pub image: Image,
+    /// The size of the rectangle used to align the image
+    ///
+    /// The position of this entity is considered the top left corner of the
+    /// rectangle used for alignment.
+    pub align_size: Size,
     /// The order in which the sprite should be drawn. Sprites with a higher
     /// draw order will be drawn above sprites with a lower draw order.
     pub draw_order: u8,
