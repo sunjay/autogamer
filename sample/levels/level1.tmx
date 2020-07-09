@@ -3539,6 +3539,11 @@
     <property name="currency_value" type="int" value="1"/>
    </properties>
    <image width="70" height="70" source="../images/items/coinGold.png"/>
+   <objectgroup draworder="index" id="2">
+    <object id="1" x="17" y="18" width="36" height="36">
+     <ellipse/>
+    </object>
+   </objectgroup>
   </tile>
   <tile id="18">
    <image width="70" height="70" source="../images/items/coinSilver.png"/>
@@ -3596,6 +3601,11 @@
     <property name="currency_value" type="int" value="25"/>
    </properties>
    <image width="70" height="70" source="../images/items/gemYellow.png"/>
+   <objectgroup draworder="index" id="2">
+    <object id="1" x="24" y="23">
+     <polygon points="0,0 -5.95652,8.6087 -6.04348,12.6522 10.0255,24.0044 12.0389,23.9973 28,12.6087 28.2174,7.78261 22.1739,-0.0434783"/>
+    </object>
+   </objectgroup>
   </tile>
   <tile id="36" type="key">
    <image width="70" height="70" source="../images/items/keyBlue.png"/>
