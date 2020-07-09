@@ -8,6 +8,8 @@ use std::{sync::Arc, fmt};
 use parking_lot::Mutex;
 use sdl2::pixels::Color;
 
+use crate::Size;
+
 pub struct Renderer {
     canvas: WindowCanvas,
     image_cache: Arc<Mutex<ImageCache>>,
@@ -33,6 +35,11 @@ impl Renderer {
         image_cache: Arc<Mutex<ImageCache>>,
     ) -> Self {
         Self {canvas, image_cache}
+    }
+
+    pub fn size(&self) -> Size {
+        let (width, height) = self.canvas.logical_size();
+        Size {width, height}
     }
 
     pub fn clear(&mut self, color: Color) {

@@ -13,7 +13,13 @@ use crate::Size;
 
 #[derive(Debug, Error)]
 #[error("{0}")]
-pub struct SdlError(String);
+pub struct SdlError(pub(crate) String);
+
+impl From<String> for SdlError {
+    fn from(s: String) -> Self {
+        SdlError(s)
+    }
+}
 
 pub struct Window {
     _sdl_context: Sdl,
@@ -24,10 +30,9 @@ pub struct Window {
 
 impl Window {
     pub fn new(title: &str, size: Size) -> Result<(Self, WindowCanvas), SdlError> {
-        let _sdl_context = sdl2::init().map_err(SdlError)?;
-        let video_subsystem = _sdl_context.video().map_err(SdlError)?;
-        let _image_context = sdl2::image::init(InitFlag::PNG | InitFlag::JPG)
-            .map_err(SdlError)?;
+        let _sdl_context = sdl2::init()?;
+        let video_subsystem = _sdl_context.video()?;
+        let _image_context = sdl2::image::init(InitFlag::PNG | InitFlag::JPG)?;
 
         //TODO: SDL2 doesn't provide a reliable scale factor through its DPI
         // support. Rather than deal with that in some fragile way using
@@ -49,7 +54,7 @@ impl Window {
             .map_err(|e| SdlError(e.to_string()))?;
         canvas.set_logical_size(size.width, size.height)
             .map_err(|e| SdlError(e.to_string()))?;
-        let event_pump = _sdl_context.event_pump().map_err(SdlError)?;
+        let event_pump = _sdl_context.event_pump()?;
 
         Ok((Self {
             _sdl_context,

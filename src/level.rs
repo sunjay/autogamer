@@ -21,6 +21,8 @@ use crate::{
     TemplateError,
     Renderer,
     ImageCache,
+    TileLayer,
+    SdlError,
 };
 
 use load_tilesets::load_tilesets;
@@ -225,7 +227,7 @@ impl Level {
         //TODO: Update physics + physics step + copy changes back to ECS
     }
 
-    pub fn draw(&self, renderer: &mut Renderer) {
+    pub fn draw(&self, renderer: &mut Renderer) -> Result<(), SdlError> {
         let Self {
             ref world,
             viewport,
@@ -236,8 +238,37 @@ impl Level {
             loaded: _,
         } = *self;
 
+        let Size {width, height} = renderer.size();
+
+        // Compute the scale factor required to fit the viewport in the canvas
+        let scale_x = width as f64 / viewport.width() as f64;
+        let scale_y = height as f64 / viewport.height() as f64;
+
         renderer.clear(background_color);
 
+        let ExtraLayers {front_layers, back_layers} = extra_layers;
+
+        for layer in back_layers {
+            draw_layer(renderer, layer, tile_size, (scale_x, scale_y))?;
+        }
+
+        //TODO: Render world
+
+        for layer in front_layers {
+            draw_layer(renderer, layer, tile_size, (scale_x, scale_y))?;
+        }
+
         renderer.present();
+
+        Ok(())
     }
+}
+
+fn draw_layer(
+    renderer: &mut Renderer,
+    layer: &TileLayer,
+    tile_size: Size,
+    (scale_x, scale_y): (f64, f64),
+) -> Result<(), SdlError> {
+    todo!()
 }

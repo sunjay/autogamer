@@ -112,8 +112,9 @@ impl Level {
         level.update((/* TODO */), physics)
     }
 
-    pub fn draw(&mut self, renderer: &mut Renderer) {
+    pub fn draw(&mut self, renderer: &mut Renderer) -> PyResult<()> {
         let level = self.level.lock();
-        level.draw(renderer.inner_mut());
+        level.draw(renderer.inner_mut())
+            .map_err(|err| ValueError::py_err(err.to_string()))
     }
 }
