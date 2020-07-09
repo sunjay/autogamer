@@ -95,14 +95,19 @@ impl Game {
         /// 1,000,000 us in 1 s
         const MICROS_PER_SEC: u64 = 1_000_000;
 
-        let mut window = self.game.create_window()
+        let (mut window, canvas) = self.game.create_window()
             .map_err(|err| ValueError::py_err(err.to_string()))?;
+        let image_cache = self.game.image_cache().clone();
 
         // Create the texture creator that will load images
-        let texture_creator = window.texture_creator();
-        self.game.renderer_mut()
-            .image_cache_mut()
-            .set_texture_creator(texture_creator);
+        let texture_creator = canvas.texture_creator();
+        image_cache.lock().set_texture_creator(texture_creator);
+
+        let renderer = {
+            let gil = GILGuard::acquire();
+            let py = gil.python();
+            Py::new(py, Renderer::new(canvas, image_cache))?
+        };
 
         let current_screen = match self.current_screen.take() {
             Some(screen) => screen,
@@ -153,7 +158,7 @@ impl Game {
                 current_screen.call_method1("update", (0,))?;
                 events.clear();
 
-                current_screen.call_method1("draw", (0,))?;
+                current_screen.call_method1("draw", (&renderer,))?;
 
                 last_frame = Instant::now();
 

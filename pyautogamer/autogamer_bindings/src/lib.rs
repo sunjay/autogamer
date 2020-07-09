@@ -1,6 +1,7 @@
 #![deny(unused_must_use)]
 
 mod entity;
+mod renderer;
 mod game;
 mod components;
 mod level;
@@ -9,6 +10,7 @@ mod ui;
 mod tile_map;
 
 use entity::*;
+use renderer::*;
 use game::*;
 use components::*;
 use level::*;

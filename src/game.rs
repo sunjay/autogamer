@@ -1,10 +1,16 @@
-use crate::{Size, Renderer, Window, SdlError};
+use std::sync::Arc;
+
+use sdl2::render::WindowCanvas;
+use parking_lot::{Mutex, MutexGuard};
+
+use crate::{Size, Window, SdlError, ImageCache};
 
 #[derive(Debug)]
 pub struct Game {
     title: String,
     window_size: Size,
-    renderer: Renderer,
+    /// The global image cache, shared by all screens and the renderer
+    image_cache: Arc<Mutex<ImageCache>>,
 }
 
 impl Game {
@@ -12,12 +18,16 @@ impl Game {
         Self {
             title,
             window_size,
-            renderer: Renderer::new(),
+            image_cache: Default::default(),
         }
     }
 
-    pub fn renderer_mut(&mut self) -> &mut Renderer {
-        &mut self.renderer
+    pub fn image_cache(&self) -> &Arc<Mutex<ImageCache>> {
+        &self.image_cache
+    }
+
+    pub fn image_cache_mut(&mut self) -> MutexGuard<ImageCache> {
+        self.image_cache.lock()
     }
 
     pub fn window_width(&self) -> u32 {
@@ -28,7 +38,7 @@ impl Game {
         self.window_size.height
     }
 
-    pub fn create_window(&self) -> Result<Window, SdlError> {
+    pub fn create_window(&self) -> Result<(Window, WindowCanvas), SdlError> {
         Window::new(&self.title, self.window_size)
     }
 }

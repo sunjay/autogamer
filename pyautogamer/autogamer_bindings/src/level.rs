@@ -85,11 +85,12 @@ impl Level {
         let py = gil.python();
 
         let mut game = self.game.borrow_mut(py);
+        let mut image_cache = game.inner_mut().image_cache_mut();
 
         self.level.lock().load(
             map.base_dir(),
             map.inner(),
-            game.inner_mut().renderer_mut(),
+            &mut image_cache,
         ).map_err(|err| ValueError::py_err(err.to_string()))
     }
 
@@ -104,23 +105,15 @@ impl Level {
     pub fn update(&mut self, events: i32) {
         let gil = GILGuard::acquire();
         let py = gil.python();
-        let physics = self.physics.borrow_mut(py);
+        let mut physics = self.physics.borrow_mut(py);
         let physics = physics.inner_mut();
 
         let mut level = self.level.lock();
         level.update((/* TODO */), physics)
     }
 
-    //TODO: Figure out type for `renderer`
-    pub fn draw(&mut self, renderer: i32) {
-        //TODO: This code will change/disappear once we figure out how to pass
-        // the renderer as an argument here
-        let gil = GILGuard::acquire();
-        let py = gil.python();
-        let mut game = self.game.borrow_mut(py);
-        let renderer = game.inner_mut().renderer_mut();
-
-        let mut level = self.level.lock();
-        level.draw(renderer);
+    pub fn draw(&mut self, renderer: &mut Renderer) {
+        let level = self.level.lock();
+        level.draw(renderer.inner_mut());
     }
 }

@@ -13,13 +13,14 @@ use crate::{
     Game,
     TileMap,
     Size,
-    Renderer,
     Physics,
     Player,
     Position,
     Vec2,
     ExtraLayers,
     TemplateError,
+    Renderer,
+    ImageCache,
 };
 
 use load_tilesets::load_tilesets;
@@ -147,7 +148,7 @@ impl Level {
         &mut self,
         base_dir: &Path,
         map: &TileMap,
-        renderer: &mut Renderer,
+        image_cache: &mut ImageCache,
     ) -> Result<(), LoadError> {
         let Self {
             world,
@@ -192,7 +193,7 @@ impl Level {
         tile_size.width = tile_width;
         tile_size.height = tile_height;
 
-        let tiles = load_tilesets(base_dir, tilesets, renderer)?;
+        let tiles = load_tilesets(base_dir, tilesets, image_cache)?;
         load_layers(nrows, ncols, layers, &tiles, world, extra_layers)?;
 
         //TODO: Store the level_start position
@@ -224,6 +225,17 @@ impl Level {
         //TODO: Update physics + physics step + copy changes back to ECS
     }
 
-    pub fn draw(&mut self, renderer: &mut Renderer) {
+    pub fn draw(&self, renderer: &mut Renderer) {
+        let Self {
+            world,
+            viewport,
+            level_start: _,
+            tile_size,
+            extra_layers,
+            background_color,
+            loaded: _,
+        } = self;
+
+
     }
 }

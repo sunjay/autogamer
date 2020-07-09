@@ -13,3 +13,4 @@ specs = {version = "0.16", features = ["specs-derive"]}
 thiserror = "1.0"
 sdl2 = {version = "0.34", features = ["image", "unsafe_textures"]}
 nphysics2d = "0.16"
+parking_lot = "0.11"

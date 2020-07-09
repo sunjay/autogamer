@@ -36,8 +36,7 @@ impl Screen {
     }
 
     //TODO: Figure out type for `events`
-    pub fn update(&mut self, events: i32) {}
+    pub fn update(&mut self, _events: i32) {}
 
-    //TODO: Figure out type for `renderer`
-    pub fn draw(&mut self, renderer: i32) {}
+    pub fn draw(&mut self, _renderer: &mut Renderer) {}
 }

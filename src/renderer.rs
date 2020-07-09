@@ -1,20 +1,33 @@
 mod image_cache;
 
 pub use image_cache::*;
+pub use sdl2::render::WindowCanvas;
 
-#[derive(Debug)]
+use std::{sync::Arc, fmt};
+
+use parking_lot::Mutex;
+
 pub struct Renderer {
-    image_cache: ImageCache,
+    canvas: WindowCanvas,
+    image_cache: Arc<Mutex<ImageCache>>,
+}
+
+impl fmt::Debug for Renderer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let Self {
+            canvas: _,
+            image_cache,
+        } = self;
+
+        f.debug_struct("Renderer")
+            .field("canvas", &"WindowCanvas")
+            .field("image_cache", &image_cache)
+            .finish()
+    }
 }
 
 impl Renderer {
-    pub fn new() -> Self {
-        Self {
-            image_cache: ImageCache::default(),
-        }
-    }
-
-    pub fn image_cache_mut(&mut self) -> &mut ImageCache {
-        &mut self.image_cache
+    pub fn new(canvas: WindowCanvas, image_cache: Arc<Mutex<ImageCache>>) -> Self {
+        Self {canvas, image_cache}
     }
 }

@@ -1,9 +1,9 @@
 use sdl2::{
     Sdl,
+    EventPump,
     event::EventPollIterator,
     image::{InitFlag, Sdl2ImageContext},
-    render::{TextureCreator, WindowCanvas},
-    video::WindowContext, EventPump,
+    render::WindowCanvas,
 };
 use thiserror::Error;
 
@@ -16,12 +16,11 @@ pub struct SdlError(String);
 pub struct Window {
     _sdl_context: Sdl,
     _image_context: Sdl2ImageContext,
-    canvas: WindowCanvas,
     event_pump: EventPump,
 }
 
 impl Window {
-    pub fn new(title: &str, size: Size) -> Result<Self, SdlError> {
+    pub fn new(title: &str, size: Size) -> Result<(Self, WindowCanvas), SdlError> {
         let _sdl_context = sdl2::init().map_err(SdlError)?;
         let video_subsystem = _sdl_context.video().map_err(SdlError)?;
         let _image_context = sdl2::image::init(InitFlag::PNG | InitFlag::JPG)
@@ -36,11 +35,7 @@ impl Window {
             .map_err(|e| SdlError(e.to_string()))?;
         let event_pump = _sdl_context.event_pump().map_err(SdlError)?;
 
-        Ok(Self {_sdl_context, _image_context, canvas, event_pump})
-    }
-
-    pub fn texture_creator(&self) -> TextureCreator<WindowContext> {
-        self.canvas.texture_creator()
+        Ok((Self {_sdl_context, _image_context, event_pump}, canvas))
     }
 
     pub fn poll_iter(&mut self) -> EventPollIterator {
