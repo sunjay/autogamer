@@ -6,7 +6,7 @@ pub use sdl2::render::WindowCanvas;
 use std::{sync::Arc, fmt};
 
 use parking_lot::Mutex;
-use sdl2::{rect::Point, pixels::Color};
+use sdl2::{rect::{Rect, Point}, pixels::Color};
 
 use crate::{SdlError, Size, ImageParams};
 
@@ -57,6 +57,19 @@ impl Renderer {
         params: ImageParams,
         top_left: Point,
     ) -> Result<(), SdlError> {
-        todo!()
+        let size = params.size;
+        let dest = Rect::new(
+            top_left.x(),
+            top_left.y(),
+            size.width,
+            size.height,
+        );
+
+        let mut image_cache = self.image_cache.lock();
+        let tex = image_cache.load(image, params)?;
+
+        self.canvas.copy(tex, None, dest)?;
+
+        Ok(())
     }
 }

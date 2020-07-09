@@ -281,8 +281,8 @@ fn draw_layer(
     } = layer;
 
     // Draw tiles in right-down order
-    for (i, row) in (0u32..).zip(tiles) {
-        for (j, image) in (0u32..).zip(row) {
+    for (row_i, row) in (0u32..).zip(tiles) {
+        for (col_i, image) in (0u32..).zip(row) {
             let image = match image {
                 Some(image) => image,
                 None => continue,
@@ -290,8 +290,8 @@ fn draw_layer(
 
             // Compute the position of the tile in world coordinates
             let world_pos = Vec2::new(
-                (i * tile_size.width) as f64 + offset.x,
-                (j * tile_size.height) as f64 + offset.y,
+                (col_i * tile_size.width) as f64 + offset.x,
+                (row_i * tile_size.height) as f64 + offset.y,
             );
 
             render_image(
@@ -342,7 +342,12 @@ fn render_image(
     );
 
     if viewport.has_intersection(screen_rect) {
-        renderer.render_image(id, params, screen_rect.top_left())?;
+        renderer.render_image(
+            id,
+            params,
+            // Position is relative to the top left of the viewport
+            screen_rect.top_left() - viewport.top_left(),
+        )?;
     }
 
     Ok(())

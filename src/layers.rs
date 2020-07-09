@@ -88,7 +88,7 @@ pub struct Image {
     pub params: ImageParams,
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ImageParams {
     /// The size in pixels at which to draw the image (can be different from the
     /// size of the image stored in the image file)
