@@ -122,6 +122,7 @@ pub fn load_tilesets(
                     width: width as u32,
                     height: height as u32,
                 },
+                //TODO: Get alignment from <tileset> tag
                 align: Align::default(),
             };
 

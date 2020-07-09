@@ -4,10 +4,16 @@ use noisy_float::types::R64;
 
 use crate::{Size, Vec2, TileId, ImageId};
 
-/// Defines how a tile image is aligned with respect to its position
+/// Defines how an image is to be aligned
 ///
-/// For example, an alignment of `BottomLeft` means that the image will be drawn
-/// so that its bottom left corner is at its position.
+/// For images within a tile, this defines how the image is to be aligned with
+/// the tile rectangle. For example, an alignment of `BottomLeft` means that the
+/// image will be aligned with the bottom right corner of the tile.
+///
+/// For images associated with an entity (a tile object in Tiled), this defines
+/// how the image will be aligned with the position of that entity. For example,
+/// an alignment of `BottomLeft` means that the image will be aligned so that
+/// its bottom left corner is at the position of the entity.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Align {
     TopLeft,
@@ -72,22 +78,25 @@ pub struct Tile {
 }
 
 /// An image that can be drawn on the screen
-///
-/// When rendering, the diagonal flip (x/y axis swap) is done first,
-/// followed by the horizontal and vertical flips.
-///
-/// See: https://doc.mapeditor.org/en/stable/reference/tmx-map-format/#tile-flipping
 #[derive(Debug, Clone, PartialEq)]
 pub struct Image {
     /// The ID of the image in the renderer image cache (for quick lookups
     /// without needing to store the path here)
     pub id: ImageId,
-    /// The alignment of the image with respect to its position on the screen
+    /// Defines the alignment of the image
+    ///
+    /// See the documentation on the `Align` type for more info.
     pub align: Align,
     /// Additional parameters used when drawing the image
     pub params: ImageParams,
 }
 
+/// Additional parameters used when rendering an image
+///
+/// When rendering, the diagonal flip (x/y axis swap) is done first,
+/// followed by the horizontal and vertical flips.
+///
+/// See: https://doc.mapeditor.org/en/stable/reference/tmx-map-format/#tile-flipping
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ImageParams {
     /// The size in pixels at which to draw the image (can be different from the

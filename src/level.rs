@@ -35,6 +35,7 @@ use crate::{
     Image,
     ImageParams,
     SdlError,
+    Align,
 };
 
 use load_tilesets::load_tilesets;
@@ -293,12 +294,14 @@ impl Level {
 
         for (Position(world_pos), sprite) in (&positions, &sprites).join() {
             let &world_pos = world_pos;
-            let Sprite {image, draw_order} = sprite;
+            let &Sprite {ref image, draw_order} = sprite;
 
             draw_image(
                 renderer,
                 image,
                 world_pos,
+                //TODO: This should be (0, 0) for tile objects
+                tile_size,
                 screen_viewport,
                 (scale_x, scale_y),
             )?;
@@ -352,6 +355,7 @@ fn draw_layer(
                 renderer,
                 image,
                 world_pos,
+                tile_size,
                 screen_viewport,
                 (scale_x, scale_y),
             )?;
@@ -361,10 +365,14 @@ fn draw_layer(
     Ok(())
 }
 
+/// The `world_pos` and `world_size` parameters represent the top-left corner
+/// size of the rectangle used to align the image. Use a size of (0, 0) when
+/// drawing something that is only represented by a position (e.g. an entity).
 fn draw_image(
     renderer: &mut Renderer,
     image: &Image,
     world_pos: Vec2,
+    world_size: Size,
     screen_viewport: Rect,
     (scale_x, scale_y): (f64, f64),
 ) -> Result<(), SdlError> {
@@ -375,32 +383,87 @@ fn draw_image(
     } = image;
 
     // Update the size to be the size in screen coordinates
-    let size = params.size;
-    let size = Size {
-        width: (size.width as f64 * scale_x) as u32,
-        height: (size.height as f64 * scale_y) as u32,
-    };
-    let params = ImageParams {size, ..params.clone()};
+    let image_width = (params.size.width as f64 * scale_x) as i32;
+    let image_height = (params.size.height as f64 * scale_y) as i32;
 
+    // The position and size of the object we're drawing (potentially different
+    // than the image position and size because of alignment)
     let screen_pos = Point::new(
         (world_pos.x * scale_x) as i32,
         (world_pos.y * scale_y) as i32,
     );
+    let screen_width = (world_size.width as f64 * scale_x) as i32;
+    let screen_height = (world_size.height as f64 * scale_y) as i32;
 
-    //TODO: Compute this rectangle based on `align`
-    let screen_rect = Rect::new(
-        screen_pos.x(),
-        screen_pos.y(),
-        size.width,
-        size.height,
+    // The screen position for the **top left** of the image, computed based on
+    // the alignment
+    let image_screen_top_left = match align {
+        Align::TopLeft => {
+            screen_pos
+        },
+        Align::Top => {
+            screen_pos + Point::new(screen_width/2 - image_width/2, 0)
+        },
+        Align::TopRight => {
+            screen_pos + Point::new(screen_width - image_width, 0)
+        },
+        Align::Left => {
+            screen_pos + Point::new(0, screen_height/2 - image_height/2)
+        },
+        Align::Center => {
+            screen_pos + Point::new(
+                screen_width/2 - image_width/2,
+                screen_height/2 - image_height/2,
+            )
+        },
+        Align::Right => {
+            screen_pos + Point::new(
+                screen_width - image_width,
+                screen_height/2 - image_height/2,
+            )
+        },
+        Align::BottomLeft => {
+            screen_pos + Point::new(0, screen_height - image_height)
+        },
+        Align::Bottom => {
+            screen_pos + Point::new(
+                screen_width/2 - image_width/2,
+                screen_height - image_height,
+            )
+        },
+        Align::BottomRight => {
+            screen_pos + Point::new(
+                screen_width - image_width,
+                screen_height - image_height,
+            )
+        },
+    };
+
+    // The area of the screen used by this image
+    let image_screen_rect = Rect::new(
+        image_screen_top_left.x(),
+        image_screen_top_left.y(),
+        // Using image_size not screen_width/screen_height because the image
+        // dimensions can be different than the size of the item being drawn
+        image_width as u32,
+        image_height as u32,
     );
 
-    if screen_viewport.has_intersection(screen_rect) {
+    // Render the image if it is even partially in the screen viewport
+    if screen_viewport.has_intersection(image_screen_rect) {
+        let params = ImageParams {
+            size: Size {
+                width: image_screen_rect.width(),
+                height: image_screen_rect.height(),
+            },
+            ..params.clone()
+        };
+
         renderer.draw_image(
             id,
             params,
             // Position is relative to the top left of the viewport
-            screen_rect.top_left() - screen_viewport.top_left(),
+            image_screen_rect.top_left() - screen_viewport.top_left(),
         )?;
     }
 
