@@ -102,9 +102,25 @@ impl Level {
 
     //TODO: Figure out type for `events`
     pub fn update(&mut self, events: i32) {
+        let gil = GILGuard::acquire();
+        let py = gil.python();
+        let physics = self.physics.borrow_mut(py);
+        let physics = physics.inner_mut();
+
+        let mut level = self.level.lock();
+        level.update((/* TODO */), physics)
     }
 
     //TODO: Figure out type for `renderer`
     pub fn draw(&mut self, renderer: i32) {
+        //TODO: This code will change/disappear once we figure out how to pass
+        // the renderer as an argument here
+        let gil = GILGuard::acquire();
+        let py = gil.python();
+        let mut game = self.game.borrow_mut(py);
+        let renderer = game.inner_mut().renderer_mut();
+
+        let mut level = self.level.lock();
+        level.draw(renderer);
     }
 }

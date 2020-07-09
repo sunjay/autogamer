@@ -7,6 +7,16 @@ pub struct Physics {
     physics: ag::Physics,
 }
 
+impl Physics {
+    pub fn inner(&self) -> &ag::Physics {
+        &self.physics
+    }
+
+    pub fn inner_mut(&mut self) -> &mut ag::Physics {
+        &mut self.physics
+    }
+}
+
 #[pymethods]
 impl Physics {
     #[new]

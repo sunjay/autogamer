@@ -14,6 +14,7 @@ use crate::{
     TileMap,
     Size,
     Renderer,
+    Physics,
     Player,
     Position,
     Vec2,
@@ -216,5 +217,13 @@ impl Level {
         let Size {width, height} = size;
         self.viewport.set_width(width);
         self.viewport.set_height(height);
+    }
+
+    pub fn update(&mut self, events: (/* TODO */), physics: &mut Physics) {
+        //TODO: Update level
+        //TODO: Update physics + physics step + copy changes back to ECS
+    }
+
+    pub fn draw(&mut self, renderer: &mut Renderer) {
     }
 }
