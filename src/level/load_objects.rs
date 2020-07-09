@@ -74,6 +74,7 @@ pub fn load_objects(
             // no tile is associated with this object
             if gid == 0 {
                 apply_object_templates(
+                    id,
                     obj_type,
                     world_pos,
                     shape,
@@ -141,6 +142,7 @@ pub fn load_objects(
 }
 
 fn apply_object_templates(
+    id: u32,
     obj_type: &str,
     world_pos: Vec2,
     shape: &tiled::ObjectShape,
@@ -148,9 +150,27 @@ fn apply_object_templates(
     world: &mut World,
     level_start: &mut Option<Vec2>,
 ) -> Result<(), LoadError> {
-    //TODO
-    // let point_shape = tiled::ObjectShape::Rect {width: 0.0, height: 0.0};
-    // if name == "level_start" && *shape == point_shape
+    match obj_type {
+        "level_start" => {
+            let point_shape = tiled::ObjectShape::Rect {width: 0.0, height: 0.0};
+            if *shape == point_shape {
+                if level_start.is_some() {
+                    println!("Warning: ignoring duplicate `level_start` indicator (ID = {})", id);
+
+                } else {
+                    *level_start = Some(world_pos);
+                }
+
+            } else {
+                println!("Warning: The `level_start` indicator should to be a single point (ID = {})", id);
+            }
+        },
+
+        //TODO: Process other object types
+
+        _ => {},
+    }
+
     Ok(())
 }
 
