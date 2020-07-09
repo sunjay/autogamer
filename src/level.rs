@@ -227,15 +227,17 @@ impl Level {
 
     pub fn draw(&self, renderer: &mut Renderer) {
         let Self {
-            world,
+            ref world,
             viewport,
             level_start: _,
             tile_size,
-            extra_layers,
+            ref extra_layers,
             background_color,
             loaded: _,
-        } = self;
+        } = *self;
 
+        renderer.clear(background_color);
 
+        renderer.present();
     }
 }

@@ -6,6 +6,7 @@ pub use sdl2::render::WindowCanvas;
 use std::{sync::Arc, fmt};
 
 use parking_lot::Mutex;
+use sdl2::pixels::Color;
 
 pub struct Renderer {
     canvas: WindowCanvas,
@@ -29,5 +30,14 @@ impl fmt::Debug for Renderer {
 impl Renderer {
     pub fn new(canvas: WindowCanvas, image_cache: Arc<Mutex<ImageCache>>) -> Self {
         Self {canvas, image_cache}
+    }
+
+    pub fn clear(&mut self, color: Color) {
+        self.canvas.set_draw_color(color);
+        self.canvas.clear();
+    }
+
+    pub fn present(&mut self) {
+        self.canvas.present();
     }
 }
