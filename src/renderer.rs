@@ -6,9 +6,9 @@ pub use sdl2::render::WindowCanvas;
 use std::{sync::Arc, fmt};
 
 use parking_lot::Mutex;
-use sdl2::pixels::Color;
+use sdl2::{rect::Point, pixels::Color};
 
-use crate::Size;
+use crate::{SdlError, Size, ImageParams};
 
 pub struct Renderer {
     canvas: WindowCanvas,
@@ -49,5 +49,14 @@ impl Renderer {
 
     pub fn present(&mut self) {
         self.canvas.present();
+    }
+
+    pub fn render_image(
+        &mut self,
+        image: ImageId,
+        params: ImageParams,
+        top_left: Point,
+    ) -> Result<(), SdlError> {
+        todo!()
     }
 }

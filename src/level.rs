@@ -6,7 +6,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use thiserror::Error;
-use sdl2::{pixels::Color, rect::Rect};
+use sdl2::{pixels::Color, rect::{Point, Rect}};
 use specs::{World, WorldExt, Entity, Builder};
 
 use crate::{
@@ -22,6 +22,8 @@ use crate::{
     Renderer,
     ImageCache,
     TileLayer,
+    Image,
+    ImageParams,
     SdlError,
 };
 
@@ -249,13 +251,13 @@ impl Level {
         let ExtraLayers {front_layers, back_layers} = extra_layers;
 
         for layer in back_layers {
-            draw_layer(renderer, layer, tile_size, (scale_x, scale_y))?;
+            draw_layer(renderer, layer, viewport, tile_size, (scale_x, scale_y))?;
         }
 
         //TODO: Render world
 
         for layer in front_layers {
-            draw_layer(renderer, layer, tile_size, (scale_x, scale_y))?;
+            draw_layer(renderer, layer, viewport, tile_size, (scale_x, scale_y))?;
         }
 
         renderer.present();
@@ -267,8 +269,81 @@ impl Level {
 fn draw_layer(
     renderer: &mut Renderer,
     layer: &TileLayer,
+    viewport: Rect,
     tile_size: Size,
     (scale_x, scale_y): (f64, f64),
 ) -> Result<(), SdlError> {
-    todo!()
+    let TileLayer {
+        offset,
+        nrows: _,
+        ncols: _,
+        tiles,
+    } = layer;
+
+    // Draw tiles in right-down order
+    for (i, row) in (0u32..).zip(tiles) {
+        for (j, image) in (0u32..).zip(row) {
+            let image = match image {
+                Some(image) => image,
+                None => continue,
+            };
+
+            // Compute the position of the tile in world coordinates
+            let world_pos = Vec2::new(
+                (i * tile_size.width) as f64 + offset.x,
+                (j * tile_size.height) as f64 + offset.y,
+            );
+
+            render_image(
+                renderer,
+                image,
+                world_pos,
+                viewport,
+                (scale_x, scale_y),
+            )?;
+        }
+    }
+
+    Ok(())
+}
+
+fn render_image(
+    renderer: &mut Renderer,
+    image: &Image,
+    world_pos: Vec2,
+    viewport: Rect,
+    (scale_x, scale_y): (f64, f64),
+) -> Result<(), SdlError> {
+    let &Image {
+        id,
+        align,
+        ref params,
+    } = image;
+
+    // Update the size to be the size in screen coordinates
+    let size = params.size;
+    let size = Size {
+        width: (size.width as f64 * scale_x) as u32,
+        height: (size.height as f64 * scale_y) as u32,
+    };
+    let params = ImageParams {size, ..params.clone()};
+
+    let screen_pos = Point::new(
+        (world_pos.x * scale_x) as i32,
+        (world_pos.y * scale_y) as i32,
+    );
+
+    //TODO: Compute this rectangle based on `align`
+    let screen_rect = Rect::new(
+        screen_pos.x(),
+        screen_pos.y(),
+        size.width,
+        size.height,
+    );
+
+    if viewport.has_intersection(screen_rect) {
+        renderer.render_image(id, params, screen_rect.top_left())?;
+    }
+
+    Ok(())
 }

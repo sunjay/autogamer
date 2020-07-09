@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use noisy_float::types::R64;
+
 use crate::{Size, Vec2, TileId, ImageId};
 
 /// Defines how a tile image is aligned with respect to its position
@@ -80,11 +82,17 @@ pub struct Image {
     /// The ID of the image in the renderer image cache (for quick lookups
     /// without needing to store the path here)
     pub id: ImageId,
+    /// The alignment of the image with respect to its position on the screen
+    pub align: Align,
+    /// Additional parameters used when drawing the image
+    pub params: ImageParams,
+}
+
+#[derive(Debug, Clone, PartialEq, Hash)]
+pub struct ImageParams {
     /// The size in pixels at which to draw the image (can be different from the
     /// size of the image stored in the image file)
     pub size: Size,
-    /// The alignment of the image with respect to the position of the entity
-    pub align: Align,
     /// true if the image should be flipped horizontally
     pub flip_horizontal: bool,
     /// true if the image should be flipped vertically
@@ -92,7 +100,7 @@ pub struct Image {
     /// true if the image should be flipped along its diagonal
     pub flip_diagonal: bool,
     /// The opacity with which to draw the image (between 0.0 and 1.0)
-    pub opacity: f64,
+    pub opacity: R64,
 }
 
 #[derive(Debug)]

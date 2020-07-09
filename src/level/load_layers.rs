@@ -1,3 +1,4 @@
+use std::convert::TryInto;
 use std::collections::HashMap;
 
 use specs::{World, WorldExt, Builder};
@@ -9,6 +10,7 @@ use crate::{
     TileLayer,
     Vec2,
     Image,
+    ImageParams,
     Sprite,
     ApplyComponentTemplates,
 };
@@ -169,12 +171,15 @@ fn process_layer_tile<'a>(
 
     let image = Image {
         id: image_id,
-        size,
         align,
-        flip_horizontal,
-        flip_vertical,
-        flip_diagonal,
-        opacity,
+        params: ImageParams {
+            size,
+            flip_horizontal,
+            flip_vertical,
+            flip_diagonal,
+            opacity: opacity.try_into()
+                .expect("opacity should have been between 0.0 and 1.0"),
+        },
     };
 
     Some((tile, image))

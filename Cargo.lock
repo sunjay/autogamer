@@ -43,6 +43,7 @@ checksum = "f8aac770f1885fd7e387acedd76065302551364496e46b3dd00860b2f8359b9d"
 name = "autogamer"
 version = "0.1.0"
 dependencies = [
+ "noisy_float",
  "nphysics2d",
  "parking_lot",
  "sdl2",
@@ -458,6 +459,15 @@ dependencies = [
  "slab",
  "slotmap",
  "smallvec",
+]
+
+[[package]]
+name = "noisy_float"
+version = "0.1.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1b3e1bd47a70dc23b4b1d4c7dabe09135cf86a5eb2ad5a60c853cb69c64d32e"
+dependencies = [
+ "num-traits",
 ]
 
 [[package]]
