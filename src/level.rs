@@ -1,5 +1,6 @@
 mod load_tilesets;
 mod load_layers;
+mod load_objects;
 
 use std::fmt;
 use std::io;
@@ -15,6 +16,7 @@ use specs::{
     Builder,
     SystemData,
     ReadStorage,
+    WriteStorage,
     prelude::ResourceId,
 };
 
@@ -40,6 +42,7 @@ use crate::{
 
 use load_tilesets::load_tilesets;
 use load_layers::load_layers;
+use load_objects::load_objects;
 
 /// The draw order value of tiles inserted into the world from the map layer
 const TILE_DRAW_ORDER: u8 = 0;
@@ -176,7 +179,7 @@ impl Level {
         let Self {
             world,
             viewport: _,
-            level_start: _,
+            level_start,
             extra_layers,
             tile_size,
             background_color,
@@ -218,10 +221,15 @@ impl Level {
 
         let tiles = load_tilesets(base_dir, tilesets, image_cache)?;
         load_layers(nrows, ncols, layers, *tile_size, &tiles, world, extra_layers)?;
+        load_objects(object_groups, &tiles, world, level_start)?;
 
-        //TODO: Store the level_start position
-        //TODO: Check if we have an entity with the Player component, and if so
-        // add a Position component.
+        // Update any existing players based on the loaded level start
+        if let Some(level_start) = *level_start {
+            let (players, mut positions): (ReadStorage<Player>, WriteStorage<Position>) = world.system_data();
+            for (Player, Position(pos)) in (&players, &mut positions).join() {
+                *pos = level_start;
+            }
+        }
 
         *loaded = true;
 
