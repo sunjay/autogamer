@@ -156,8 +156,14 @@ impl Game {
                 // overridden versions of these methods, not just the methods on
                 // the base Screen class
                 current_screen.call_method1("update", (0,))?;
+                // Clear events so we don't get stale data next time
+                // Reuses the previously allocated memory for the events
                 events.clear();
 
+                // Update the scale factor used for drawing the image
+                renderer.borrow_mut(py)
+                    .inner_mut()
+                    .set_scale_factor(window.scale_factor());
                 current_screen.call_method1("draw", (&renderer,))?;
 
                 last_frame = Instant::now();
