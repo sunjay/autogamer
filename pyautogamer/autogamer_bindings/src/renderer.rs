@@ -14,13 +14,11 @@ impl Renderer {
     pub fn new(
         canvas: ag::WindowCanvas,
         image_cache: Arc<Mutex<ag::ImageCache>>,
-        scale_factor: f64,
     ) -> Self {
         Self {
             renderer: ag::Renderer::new(
                 canvas,
                 image_cache,
-                scale_factor,
             ),
         }
     }

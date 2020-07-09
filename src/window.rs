@@ -41,10 +41,13 @@ impl Window {
         let height = (size.height as f64 * scale_factor) as u32;
         let window = video_subsystem.window(title, width, height)
             .position_centered()
+            .resizable()
             .build()
             .map_err(|e| SdlError(e.to_string()))?;
-        let canvas = window.into_canvas()
+        let mut canvas = window.into_canvas()
             .build()
+            .map_err(|e| SdlError(e.to_string()))?;
+        canvas.set_logical_size(size.width, size.height)
             .map_err(|e| SdlError(e.to_string()))?;
         let event_pump = _sdl_context.event_pump().map_err(SdlError)?;
 

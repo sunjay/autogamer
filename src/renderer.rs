@@ -11,7 +11,6 @@ use sdl2::pixels::Color;
 pub struct Renderer {
     canvas: WindowCanvas,
     image_cache: Arc<Mutex<ImageCache>>,
-    scale_factor: f64,
 }
 
 impl fmt::Debug for Renderer {
@@ -19,13 +18,11 @@ impl fmt::Debug for Renderer {
         let Self {
             canvas: _,
             image_cache,
-            scale_factor,
         } = self;
 
         f.debug_struct("Renderer")
             .field("canvas", &"WindowCanvas")
             .field("image_cache", &image_cache)
-            .field("scale_factor", &scale_factor)
             .finish()
     }
 }
@@ -34,9 +31,8 @@ impl Renderer {
     pub fn new(
         canvas: WindowCanvas,
         image_cache: Arc<Mutex<ImageCache>>,
-        scale_factor: f64,
     ) -> Self {
-        Self {canvas, image_cache, scale_factor}
+        Self {canvas, image_cache}
     }
 
     pub fn clear(&mut self, color: Color) {

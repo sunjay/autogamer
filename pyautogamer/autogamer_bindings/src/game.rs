@@ -103,13 +103,10 @@ impl Game {
         let texture_creator = canvas.texture_creator();
         image_cache.lock().set_texture_creator(texture_creator);
 
-        // Get the scale factor used for drawing the image
-        let scale_factor = window.scale_factor();
-
         let renderer = {
             let gil = GILGuard::acquire();
             let py = gil.python();
-            Py::new(py, Renderer::new(canvas, image_cache, scale_factor))?
+            Py::new(py, Renderer::new(canvas, image_cache))?
         };
 
         let current_screen = match self.current_screen.take() {
