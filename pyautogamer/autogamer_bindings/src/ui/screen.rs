@@ -35,13 +35,9 @@ impl Screen {
         Self {game}
     }
 
-    pub fn update(&mut self, events: i32) {
-        //TODO: Figure out type for `events`
-        todo!()
-    }
+    //TODO: Figure out type for `events`
+    pub fn update(&mut self, events: i32) {}
 
-    pub fn draw(&mut self, renderer: i32) {
-        //TODO: Figure out type for `renderer`
-        todo!()
-    }
+    //TODO: Figure out type for `renderer`
+    pub fn draw(&mut self, renderer: i32) {}
 }

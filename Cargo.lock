@@ -57,6 +57,7 @@ dependencies = [
  "autogamer",
  "parking_lot",
  "pyo3",
+ "sdl2",
  "specs",
 ]
 
