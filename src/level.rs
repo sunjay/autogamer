@@ -105,6 +105,8 @@ struct RenderData<'a> {
 
 pub struct Level {
     world: World,
+    /// The area of the world (in world coordinates) that will be drawn by the
+    /// renderer and scaled to fit in the window
     viewport: Rect,
     level_start: Option<Vec2>,
     tile_size: Size,
@@ -262,12 +264,26 @@ impl Level {
         let scale_x = width as f64 / viewport.width() as f64;
         let scale_y = height as f64 / viewport.height() as f64;
 
+        // Scale the viewport coordinates so they are in screen coordinates
+        let screen_viewport = Rect::new(
+            (viewport.x() as f64 * scale_x) as i32,
+            (viewport.y() as f64 * scale_y) as i32,
+            viewport.width(),
+            viewport.height(),
+        );
+
         renderer.clear(background_color);
 
         let ExtraLayers {front_layers, back_layers} = extra_layers;
 
         for layer in back_layers {
-            draw_layer(renderer, layer, viewport, tile_size, (scale_x, scale_y))?;
+            draw_layer(
+                renderer,
+                layer,
+                screen_viewport,
+                tile_size,
+                (scale_x, scale_y),
+            )?;
         }
 
         let RenderData {
@@ -283,13 +299,19 @@ impl Level {
                 renderer,
                 image,
                 world_pos,
-                viewport,
+                screen_viewport,
                 (scale_x, scale_y),
             )?;
         }
 
         for layer in front_layers {
-            draw_layer(renderer, layer, viewport, tile_size, (scale_x, scale_y))?;
+            draw_layer(
+                renderer,
+                layer,
+                screen_viewport,
+                tile_size,
+                (scale_x, scale_y),
+            )?;
         }
 
         renderer.present();
@@ -301,7 +323,7 @@ impl Level {
 fn draw_layer(
     renderer: &mut Renderer,
     layer: &TileLayer,
-    viewport: Rect,
+    screen_viewport: Rect,
     tile_size: Size,
     (scale_x, scale_y): (f64, f64),
 ) -> Result<(), SdlError> {
@@ -330,7 +352,7 @@ fn draw_layer(
                 renderer,
                 image,
                 world_pos,
-                viewport,
+                screen_viewport,
                 (scale_x, scale_y),
             )?;
         }
@@ -343,7 +365,7 @@ fn draw_image(
     renderer: &mut Renderer,
     image: &Image,
     world_pos: Vec2,
-    viewport: Rect,
+    screen_viewport: Rect,
     (scale_x, scale_y): (f64, f64),
 ) -> Result<(), SdlError> {
     let &Image {
@@ -373,12 +395,12 @@ fn draw_image(
         size.height,
     );
 
-    if viewport.has_intersection(screen_rect) {
+    if screen_viewport.has_intersection(screen_rect) {
         renderer.draw_image(
             id,
             params,
             // Position is relative to the top left of the viewport
-            screen_rect.top_left() - viewport.top_left(),
+            screen_rect.top_left() - screen_viewport.top_left(),
         )?;
     }
 
