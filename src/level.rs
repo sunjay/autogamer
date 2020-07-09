@@ -7,7 +7,16 @@ use std::path::{Path, PathBuf};
 
 use thiserror::Error;
 use sdl2::{pixels::Color, rect::{Point, Rect}};
-use specs::{World, WorldExt, Entity, Builder};
+use specs::{
+    World,
+    WorldExt,
+    Join,
+    Entity,
+    Builder,
+    SystemData,
+    ReadStorage,
+    prelude::ResourceId,
+};
 
 use crate::{
     Game,
@@ -16,6 +25,7 @@ use crate::{
     Physics,
     Player,
     Position,
+    Sprite,
     Vec2,
     ExtraLayers,
     TemplateError,
@@ -85,6 +95,12 @@ fn resolve_image_path(base_dir: &Path, image_path: &str) -> Result<PathBuf, Load
     };
 
     Ok(path.canonicalize().map_err(|err| (path.to_path_buf(), err))?)
+}
+
+#[derive(SystemData)]
+struct RenderData<'a> {
+    pub positions: ReadStorage<'a, Position>,
+    pub sprites: ReadStorage<'a, Sprite>,
 }
 
 pub struct Level {
@@ -254,7 +270,23 @@ impl Level {
             draw_layer(renderer, layer, viewport, tile_size, (scale_x, scale_y))?;
         }
 
-        //TODO: Render world
+        let RenderData {
+            positions,
+            sprites,
+        } = world.system_data();
+
+        for (Position(world_pos), sprite) in (&positions, &sprites).join() {
+            let &world_pos = world_pos;
+            let Sprite {image, draw_order} = sprite;
+
+            draw_image(
+                renderer,
+                image,
+                world_pos,
+                viewport,
+                (scale_x, scale_y),
+            )?;
+        }
 
         for layer in front_layers {
             draw_layer(renderer, layer, viewport, tile_size, (scale_x, scale_y))?;
@@ -294,7 +326,7 @@ fn draw_layer(
                 (row_i * tile_size.height) as f64 + offset.y,
             );
 
-            render_image(
+            draw_image(
                 renderer,
                 image,
                 world_pos,
@@ -307,7 +339,7 @@ fn draw_layer(
     Ok(())
 }
 
-fn render_image(
+fn draw_image(
     renderer: &mut Renderer,
     image: &Image,
     world_pos: Vec2,
@@ -342,7 +374,7 @@ fn render_image(
     );
 
     if viewport.has_intersection(screen_rect) {
-        renderer.render_image(
+        renderer.draw_image(
             id,
             params,
             // Position is relative to the top left of the viewport

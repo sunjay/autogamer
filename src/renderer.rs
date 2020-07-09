@@ -51,7 +51,7 @@ impl Renderer {
         self.canvas.present();
     }
 
-    pub fn render_image(
+    pub fn draw_image(
         &mut self,
         image: ImageId,
         params: ImageParams,
