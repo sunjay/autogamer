@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use specs::{World, WorldExt, Builder};
 
 use crate::{
+    Size,
     ExtraLayers,
     Tile,
     TileImage,
@@ -13,6 +14,7 @@ use crate::{
     ImageParams,
     Sprite,
     ApplyComponentTemplates,
+    Position,
 };
 
 use super::{TILE_DRAW_ORDER, TileId, LoadError};
@@ -21,6 +23,7 @@ pub fn load_layers(
     nrows: u32,
     ncols: u32,
     layers: &[tiled::Layer],
+    tile_size: Size,
     tiles: &HashMap<TileId, Tile>,
     world: &mut World,
     extra_layers: &mut ExtraLayers,
@@ -38,6 +41,10 @@ pub fn load_layers(
             layer_index,
         } = *layer;
 
+        //TODO: Use the actual layer offset once we are using a library that
+        // actually provides that to us
+        let layer_offset = Vec2::default();
+
         assert!(layer_index >= prev_layer_index,
             "bug: this code assumes that the layers are stored in draw order");
         prev_layer_index = layer_index;
@@ -50,12 +57,21 @@ pub fn load_layers(
                 continue;
             }
 
-            load_map_layer(layer_tiles, opacity as f64, tiles, world)?;
+            load_map_layer(
+                layer_tiles,
+                layer_offset,
+                tile_size,
+                opacity as f64,
+                tiles,
+                world,
+            )?;
+
             found_map = true;
 
         } else {
             let layer = to_extra_layer(
                 layer_tiles,
+                layer_offset,
                 opacity as f64,
                 nrows as usize,
                 ncols as usize,
@@ -75,35 +91,46 @@ pub fn load_layers(
 
 fn load_map_layer(
     layer_tiles: &[Vec<tiled::LayerTile>],
+    offset: Vec2,
+    tile_size: Size,
     opacity: f64,
     tiles: &HashMap<TileId, Tile>,
     world: &mut World,
 ) -> Result<(), LoadError> {
-    for tile in layer_tiles.iter().flatten() {
-        let (tile, image) = match process_layer_tile(tiles, tile, opacity) {
-            Some((tile, image)) => (tile, image),
-            None => continue,
-        };
+    for (row_i, row) in (0u32..).zip(layer_tiles) {
+        for (col_i, tile) in (0u32..).zip(row) {
+            let (tile, image) = match process_layer_tile(tiles, tile, opacity) {
+                Some((tile, image)) => (tile, image),
+                None => continue,
+            };
 
-        let sprite = Sprite {
-            image,
-            draw_order: TILE_DRAW_ORDER,
-        };
+            // Compute the position of the tile in world coordinates
+            let world_pos = Vec2::new(
+                (col_i * tile_size.width) as f64 + offset.x,
+                (row_i * tile_size.height) as f64 + offset.y,
+            );
 
-        let Tile {
-            id,
-            image: _,
-            //TODO: Insert collision geometry or a default rectangle geometry
-            // based on the image size if this is empty
-            collision_geometry,
-            tile_type,
-            props,
-        } = tile;
+            let sprite = Sprite {
+                image,
+                draw_order: TILE_DRAW_ORDER,
+            };
 
-        world.create_entity()
-            .with(sprite)
-            .apply_templates(*id, tile_type, props)?
-            .build();
+            let Tile {
+                id,
+                image: _,
+                //TODO: Insert collision geometry or a default rectangle geometry
+                // based on the image size if this is empty
+                collision_geometry,
+                tile_type,
+                props,
+            } = tile;
+
+            world.create_entity()
+                .with(Position(world_pos))
+                .with(sprite)
+                .apply_templates(*id, tile_type, props)?
+                .build();
+        }
     }
 
     Ok(())
@@ -111,15 +138,12 @@ fn load_map_layer(
 
 fn to_extra_layer(
     layer_tiles: &[Vec<tiled::LayerTile>],
+    offset: Vec2,
     opacity: f64,
     nrows: usize,
     ncols: usize,
     tiles: &HashMap<TileId, Tile>,
 ) -> TileLayer {
-    //TODO: Use the actual layer offset once we are using a library that
-    // actually provides that to us
-    let offset = Vec2::default();
-
     let mut grid_tiles = Vec::new();
     for row in layer_tiles {
         assert!(row.len() <= ncols,

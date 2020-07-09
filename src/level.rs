@@ -214,7 +214,7 @@ impl Level {
         tile_size.height = tile_height;
 
         let tiles = load_tilesets(base_dir, tilesets, image_cache)?;
-        load_layers(nrows, ncols, layers, &tiles, world, extra_layers)?;
+        load_layers(nrows, ncols, layers, *tile_size, &tiles, world, extra_layers)?;
 
         //TODO: Store the level_start position
         //TODO: Check if we have an entity with the Player component, and if so
