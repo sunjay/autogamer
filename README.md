@@ -45,5 +45,13 @@ following command:
 This will run `sample/getting-started.py`. If no `--sample` argument is
 provided, the `sample/demo.py` script is run.
 
+Set the `DISPLAY_SCALE` environment variable to change the scale factor used for
+rendering. This is useful on high DPI displays where the window would be too
+small without a scale factor.
+
+```
+DISPLAY_SCALE=2 ./x.py run
+```
+
 [Rust]: https://rustup.rs
 [PyO3]: https://pyo3.rs

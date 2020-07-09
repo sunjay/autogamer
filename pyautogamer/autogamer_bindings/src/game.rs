@@ -103,10 +103,13 @@ impl Game {
         let texture_creator = canvas.texture_creator();
         image_cache.lock().set_texture_creator(texture_creator);
 
+        // Get the scale factor used for drawing the image
+        let scale_factor = window.scale_factor();
+
         let renderer = {
             let gil = GILGuard::acquire();
             let py = gil.python();
-            Py::new(py, Renderer::new(canvas, image_cache))?
+            Py::new(py, Renderer::new(canvas, image_cache, scale_factor))?
         };
 
         let current_screen = match self.current_screen.take() {
@@ -160,10 +163,6 @@ impl Game {
                 // Reuses the previously allocated memory for the events
                 events.clear();
 
-                // Update the scale factor used for drawing the image
-                renderer.borrow_mut(py)
-                    .inner_mut()
-                    .set_scale_factor(window.scale_factor());
                 current_screen.call_method1("draw", (&renderer,))?;
 
                 last_frame = Instant::now();

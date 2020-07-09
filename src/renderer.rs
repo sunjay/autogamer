@@ -31,20 +31,12 @@ impl fmt::Debug for Renderer {
 }
 
 impl Renderer {
-    pub fn new(canvas: WindowCanvas, image_cache: Arc<Mutex<ImageCache>>) -> Self {
-        Self {
-            canvas,
-            image_cache,
-            scale_factor: 1.0,
-        }
-    }
-
-    pub fn scale_factor(&self) -> f64 {
-        self.scale_factor
-    }
-
-    pub fn set_scale_factor(&mut self, scale_factor: f64) {
-        self.scale_factor = scale_factor;
+    pub fn new(
+        canvas: WindowCanvas,
+        image_cache: Arc<Mutex<ImageCache>>,
+        scale_factor: f64,
+    ) -> Self {
+        Self {canvas, image_cache, scale_factor}
     }
 
     pub fn clear(&mut self, color: Color) {

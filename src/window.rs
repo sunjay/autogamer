@@ -1,7 +1,8 @@
+use std::env;
+
 use sdl2::{
     Sdl,
     EventPump,
-    VideoSubsystem,
     event::EventPollIterator,
     image::{InitFlag, Sdl2ImageContext},
     render::WindowCanvas,
@@ -17,8 +18,8 @@ pub struct SdlError(String);
 pub struct Window {
     _sdl_context: Sdl,
     _image_context: Sdl2ImageContext,
-    video_subsystem: VideoSubsystem,
     event_pump: EventPump,
+    scale_factor: f64,
 }
 
 impl Window {
@@ -28,8 +29,17 @@ impl Window {
         let _image_context = sdl2::image::init(InitFlag::PNG | InitFlag::JPG)
             .map_err(SdlError)?;
 
-        let window = video_subsystem.window(title, size.width, size.height)
-            .allow_highdpi()
+        //TODO: SDL2 doesn't provide a reliable scale factor through its DPI
+        // support. Rather than deal with that in some fragile way using
+        // hard-coded values, I have chosen to just use an environment variable.
+        // See: https://nlguillemot.wordpress.com/2016/12/11/high-dpi-rendering/
+        let scale_factor = env::var("DISPLAY_SCALE")
+            .map(|x| x.parse().expect("DISPLAY_SCALE must be a number"))
+            .unwrap_or(1.0);
+
+        let width = (size.width as f64 * scale_factor) as u32;
+        let height = (size.height as f64 * scale_factor) as u32;
+        let window = video_subsystem.window(title, width, height)
             .position_centered()
             .build()
             .map_err(|e| SdlError(e.to_string()))?;
@@ -38,17 +48,17 @@ impl Window {
             .map_err(|e| SdlError(e.to_string()))?;
         let event_pump = _sdl_context.event_pump().map_err(SdlError)?;
 
-        Ok((Self {_sdl_context, _image_context, video_subsystem, event_pump}, canvas))
+        Ok((Self {
+            _sdl_context,
+            _image_context,
+            event_pump,
+            scale_factor,
+        }, canvas))
     }
 
     /// Returns the DPI scale factor
     pub fn scale_factor(&self) -> f64 {
-        // Ignoring error and using 1.0 if no scale factor could be determined
-        //
-        // See: https://nlguillemot.wordpress.com/2016/12/11/high-dpi-rendering/
-        self.video_subsystem.display_dpi(0)
-            .map(|(scale, _, _)| scale as f64)
-            .unwrap_or(1.0)
+        self.scale_factor
     }
 
     pub fn poll_iter(&mut self) -> EventPollIterator {
