@@ -39,6 +39,7 @@ use crate::{
     SdlError,
     Align,
     EventStream,
+    EventKind,
 };
 
 use load_tilesets::load_tilesets;
@@ -257,6 +258,25 @@ impl Level {
     {
         //TODO: Update world via dispatcher
         //TODO: Update physics + physics step + copy changes back to ECS
+        events.for_each_event(|event| {
+            let viewport = &mut self.viewport;
+            use crate::Key;
+            match event.kind() {
+                EventKind::KeyDown {key: Key::Up, ..} => {
+                    viewport.set_y(viewport.y() - 35);
+                },
+                EventKind::KeyDown {key: Key::Down, ..} => {
+                    viewport.set_y(viewport.y() + 35);
+                },
+                EventKind::KeyDown {key: Key::Left, ..} => {
+                    viewport.set_x(viewport.x() - 35);
+                },
+                EventKind::KeyDown {key: Key::Right, ..} => {
+                    viewport.set_x(viewport.x() + 35);
+                },
+                _ => {},
+            }
+        });
     }
 
     pub fn draw(&self, renderer: &mut Renderer) -> Result<(), SdlError> {
