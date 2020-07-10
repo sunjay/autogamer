@@ -72,6 +72,8 @@ pub enum EventKind {
         key: Key,
         /// The current state of the modifier keys on the keyboard
         modifiers: Modifiers,
+        /// true if this event is repeated (caused by key repeat)
+        repeat: bool,
     },
     /// A key on the keyboard was released
     KeyUp {
@@ -123,11 +125,12 @@ impl EventKind {
                 keycode: Some(keycode),
                 scancode: _,
                 keymod,
-                repeat: false,
+                repeat,
             } => {
                 EventKind::KeyDown {
                     key: Key::from_sdl2_key(keycode)?,
                     modifiers: Modifiers::from_sdl2_mods(keymod),
+                    repeat,
                 }
             },
             KeyDown {..} => return None,
