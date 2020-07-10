@@ -20,3 +20,11 @@ impl Event {
         &mut self.event
     }
 }
+
+#[pymethods]
+impl Event {
+    /// Stops this event from ever being yielded by the event stream again
+    pub fn stop_propagation(&mut self) {
+        self.event.stop_propagation();
+    }
+}
