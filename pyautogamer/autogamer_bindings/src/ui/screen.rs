@@ -35,8 +35,7 @@ impl Screen {
         Self {game}
     }
 
-    //TODO: Figure out type for `events`
-    pub fn update(&mut self, _events: i32) {}
+    pub fn update(&mut self, _events: &EventStream) {}
 
     pub fn draw(&mut self, _renderer: &mut Renderer) {}
 }

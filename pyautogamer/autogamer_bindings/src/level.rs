@@ -101,8 +101,7 @@ impl Level {
         self.level.lock().set_viewport_dimensions(ag::Size {width, height})
     }
 
-    //TODO: Figure out type for `events`
-    pub fn update(&mut self, events: i32) {
+    pub fn update(&mut self, events: &EventStream) {
         let gil = GILGuard::acquire();
         let py = gil.python();
         let mut physics = self.physics.borrow_mut(py);

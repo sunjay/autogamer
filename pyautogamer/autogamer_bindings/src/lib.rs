@@ -2,6 +2,8 @@
 
 mod entity;
 mod renderer;
+mod event;
+mod event_stream;
 mod game;
 mod components;
 mod level;
@@ -11,6 +13,8 @@ mod tile_map;
 
 use entity::*;
 use renderer::*;
+use event::*;
+use event_stream::*;
 use game::*;
 use components::*;
 use level::*;

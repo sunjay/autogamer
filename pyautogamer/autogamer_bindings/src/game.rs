@@ -87,40 +87,39 @@ impl Game {
 
     /// Runs the game main loop until either the window is closed or the game
     /// loop is ended by the game itself
-    pub fn run(&mut self) -> PyResult<()> {
+    pub fn run(slf: PyRefMut<Self>) -> PyResult<()> {
         /// The maximum frames per second - used to limit the speed at which
         /// update() and render() are called
         const MAX_FPS: u64 = 60;
         /// 1,000,000 us in 1 s
         const MICROS_PER_SEC: u64 = 1_000_000;
 
-        let (mut window, canvas) = self.game.create_window()
+        // No screen configured, quit immediately
+        if slf.current_screen.is_none() {
+            return Ok(());
+        }
+
+        let (mut window, canvas) = slf.game.create_window()
             .map_err(|err| ValueError::py_err(err.to_string()))?;
-        let image_cache = self.game.image_cache().clone();
+        let image_cache = slf.game.image_cache().clone();
 
         // Create the texture creator that will load images
         let texture_creator = canvas.texture_creator();
         image_cache.lock().set_texture_creator(texture_creator);
 
-        let renderer = {
-            let gil = GILGuard::acquire();
-            let py = gil.python();
-            Py::new(py, Renderer::new(canvas, image_cache))?
-        };
-
-        let current_screen = match self.current_screen.take() {
-            Some(screen) => screen,
-            // No screen configured, quit immediately
-            None => return Ok(()),
-        };
+        let renderer = Py::new(slf.py(), Renderer::new(canvas, image_cache))?;
 
         let frame_duration = Duration::from_micros(MICROS_PER_SEC / MAX_FPS);
         let mut last_frame = Instant::now();
 
+        let events = Py::new(slf.py(), EventStream::default())?;
+
         let mut running = true;
-        let mut events = Vec::new();
         while running {
-            events.extend(window.poll_events());
+            let current_events = window.poll_events()
+                .map(|event| Py::new(slf.py(), Event::new(event)))
+                .collect::<Result<Vec<_>, _>>()?;
+            events.borrow_mut(slf.py()).append(current_events);
 
             // Make sure we don't update too often or we may mess up physics
             // calculations or cause rendering bottlenecks
@@ -137,22 +136,26 @@ impl Game {
                 // around this at the cost of the game potentially lagging a bit
                 // if either update or render are particularly slow.
 
-                let gil = GILGuard::acquire();
-                let py = gil.python();
-
-                let current_screen = current_screen.as_ref(py);
+                // Get the current screen from self directly since it may have
+                // changed during the previous iteration
+                let current_screen = slf.current_screen.as_ref()
+                    .expect("bug: should be impossible to set current_screen to None once initialized");
+                //TODO: Calling trait method in fully-qualified form because
+                // rust-analyzer couldn't handle two different as_ref methods
+                // taking a different number of arguments
+                let current_screen = AsPyRef::as_ref(current_screen, slf.py());
 
                 // Need to use call_method because we want to call the
                 // overridden versions of these methods, not just the methods on
                 // the base Screen class
-                current_screen.call_method1("update", (0,))?;
+                current_screen.call_method1("update", (&events,))?;
 
                 // Check if we need to quit
                 //
                 // Doing this after update so the game code has the opportunity
                 // to stop propagation on the quit or keyboard events used here
-                for event in &events {
-                    match event.kind() {
+                for event in events.borrow(slf.py()).iter(slf.py()) {
+                    match event.borrow(slf.py()).inner().kind() {
                         ag::EventKind::Quit {..} |
                         ag::EventKind::KeyUp {key: ag::Key::Escape, ..} => {
                             running = false;
@@ -163,7 +166,7 @@ impl Game {
 
                 // Clear events so we don't get stale data next time
                 // Reuses the previously allocated memory for the events
-                events.clear();
+                events.borrow_mut(slf.py()).clear();
 
                 // Render the updated state to the screen
                 current_screen.call_method1("draw", (&renderer,))?;

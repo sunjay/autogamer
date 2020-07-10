@@ -2,7 +2,6 @@
 
 mod math;
 mod event;
-mod event_stream;
 mod window;
 mod renderer;
 mod game;
@@ -15,7 +14,6 @@ mod component_templates;
 
 pub use math::*;
 pub use event::*;
-pub use event_stream::*;
 pub use window::*;
 pub use renderer::*;
 pub use game::*;
