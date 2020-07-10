@@ -252,7 +252,7 @@ impl Level {
     }
 
     pub fn update(&mut self, events: (/* TODO */), physics: &mut Physics) {
-        //TODO: Update level
+        //TODO: Update world via dispatcher
         //TODO: Update physics + physics step + copy changes back to ECS
     }
 

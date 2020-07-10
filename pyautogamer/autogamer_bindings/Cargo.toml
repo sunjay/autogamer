@@ -11,8 +11,6 @@ crate-type = ["cdylib"]
 autogamer = {path = "../.."}
 specs = {git = "https://github.com/amethyst/specs", features = ["derive"]}
 parking_lot = "0.11"
-#TODO: Remove this dependency (implementation detail)
-sdl2 = "0.34"
 
 [dependencies.pyo3]
 version = "0.11"

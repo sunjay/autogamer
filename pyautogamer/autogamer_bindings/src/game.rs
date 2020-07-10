@@ -6,7 +6,6 @@ use pyo3::prelude::*;
 use pyo3::PyTraverseError;
 use pyo3::gc::{PyGCProtocol, PyVisit};
 use pyo3::exceptions::ValueError;
-use sdl2::{keyboard::Keycode, event::Event as SDLEvent};
 
 use crate::*;
 
@@ -121,16 +120,7 @@ impl Game {
         let mut running = true;
         let mut events = Vec::new();
         while running {
-            for event in window.poll_iter() {
-                match event {
-                    SDLEvent::Quit {..} |
-                    SDLEvent::KeyDown {keycode: Some(Keycode::Escape), ..} => {
-                        running = false;
-                    },
-                    _ => {},
-                }
-                events.push(event);
-            }
+            events.extend(window.poll_events());
 
             // Make sure we don't update too often or we may mess up physics
             // calculations or cause rendering bottlenecks
@@ -156,12 +146,29 @@ impl Game {
                 // overridden versions of these methods, not just the methods on
                 // the base Screen class
                 current_screen.call_method1("update", (0,))?;
+
+                // Check if we need to quit
+                //
+                // Doing this after update so the game code has the opportunity
+                // to stop propagation on the quit or keyboard events used here
+                for event in &events {
+                    match event.kind() {
+                        ag::EventKind::Quit {..} |
+                        ag::EventKind::KeyUp {key: ag::Key::Escape, ..} => {
+                            running = false;
+                        },
+                        _ => {},
+                    }
+                }
+
                 // Clear events so we don't get stale data next time
                 // Reuses the previously allocated memory for the events
                 events.clear();
 
+                // Render the updated state to the screen
                 current_screen.call_method1("draw", (&renderer,))?;
 
+                // Record the time the frame was completed
                 last_frame = Instant::now();
 
             } else {

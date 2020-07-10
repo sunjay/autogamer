@@ -3,13 +3,12 @@ use std::env;
 use sdl2::{
     Sdl,
     EventPump,
-    event::EventPollIterator,
     image::{InitFlag, Sdl2ImageContext},
     render::WindowCanvas,
 };
 use thiserror::Error;
 
-use crate::Size;
+use crate::{Size, Event, EventKind};
 
 #[derive(Debug, Error)]
 #[error("{0}")]
@@ -69,7 +68,9 @@ impl Window {
         self.scale_factor
     }
 
-    pub fn poll_iter(&mut self) -> EventPollIterator {
-        self.event_pump.poll_iter()
+    pub fn poll_events(&mut self) -> impl Iterator<Item=Event> + '_ {
+        self.event_pump.poll_iter().filter_map(|event| {
+            Some(Event::new(EventKind::from_sdl2_event(event)?))
+        })
     }
 }
