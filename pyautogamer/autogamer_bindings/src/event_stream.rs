@@ -1,5 +1,6 @@
 use std::vec::IntoIter;
 
+use autogamer as ag;
 use pyo3::prelude::*;
 use pyo3::PyIterProtocol;
 
@@ -59,6 +60,19 @@ impl Extend<Py<Event>> for EventStream {
     }
 }
 
+impl ag::EventStream for EventStream {
+    fn for_each_event<F>(&self, mut f: F)
+        where F: FnMut(&mut ag::Event)
+    {
+        let gil = GILGuard::acquire();
+        let py = gil.python();
+        for event in &self.events {
+            let mut event = event.borrow_mut(py);
+            f(event.inner_mut());
+        }
+    }
+}
+
 #[pyclass]
 #[derive(Debug)]
 pub struct EventStreamIter {
@@ -82,7 +96,7 @@ impl ExactSizeIterator for EventStreamIter {
     }
 }
 
-impl<'a> Iterator for EventStreamIter {
+impl Iterator for EventStreamIter {
     type Item = Py<Event>;
 
     fn next(&mut self) -> Option<Self::Item> {

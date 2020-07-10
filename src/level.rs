@@ -38,6 +38,7 @@ use crate::{
     ImageParams,
     SdlError,
     Align,
+    EventStream,
 };
 
 use load_tilesets::load_tilesets;
@@ -251,7 +252,9 @@ impl Level {
         self.viewport.set_height(height);
     }
 
-    pub fn update(&mut self, events: (/* TODO */), physics: &mut Physics) {
+    pub fn update<E>(&mut self, events: &E, physics: &mut Physics)
+        where E: EventStream,
+    {
         //TODO: Update world via dispatcher
         //TODO: Update physics + physics step + copy changes back to ECS
     }

@@ -108,7 +108,7 @@ impl Level {
         let physics = physics.inner_mut();
 
         let mut level = self.level.lock();
-        level.update((/* TODO */), physics)
+        level.update(events, physics)
     }
 
     pub fn draw(&mut self, renderer: &mut Renderer) -> PyResult<()> {

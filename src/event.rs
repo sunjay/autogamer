@@ -4,6 +4,11 @@ mod event_kind;
 pub use key::*;
 pub use event_kind::*;
 
+pub trait EventStream {
+    fn for_each_event<F>(&self, f: F)
+        where F: FnMut(&mut Event);
+}
+
 #[derive(Debug, Clone)]
 pub struct Event {
     kind: EventKind,
