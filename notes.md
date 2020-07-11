@@ -13,7 +13,7 @@
 * Many entities have default components for things like position, size, etc.
   * Custom properties on tiles may also result in components being added
 
-## Implementation
+### Implementation
 
 * System Resources:
   * Game state (Running, Paused, etc.)
@@ -30,6 +30,23 @@
     * Events are passed to the HUD first
     * Events are then passed to the level where they can only be accessed via a
       System
+
+* Python systems
+  * Systems must inherit from the `System` class
+  * Systems must define a method called `run` that takes `level: Level`
+  * Taking `Level` as a parameter is useful becuase it gives you full access to
+    the ECS and to the physics parameters
+  * Example:
+      ```py
+      # Switches the direction of gravity when the spacebar is pressed
+      class KeyboardControls(System):
+          def run(self, level):
+              for event in level.resources().events():
+                  if isinstance(event, KeyboardEvent):
+                      if event.key == Key.SPACEBAR:
+                          gx, gy = level.get_gravity()
+                          level.set_gravity((gx, -gy))
+      ```
 
 ## Characters - Players & Enemies
 
