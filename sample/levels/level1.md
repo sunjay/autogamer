@@ -36,6 +36,7 @@
   * when a spider sees you, it begins to move towards you a little faster
   * slows down after a few seconds if you go out of left/right view
   * you can jump on top of them to defeat them
+* just before the boss area, there is an area of moving platforms
 * once you enter a boss_area, you can't leave
 * boss always stays within `boss_movement_zone` rectangles and can jump between them
 * you can hit the boss by jumping on their head
