@@ -17,9 +17,21 @@
         "stand": {"row": 2, "col": 5}
     },
     "animations": {
-        "walk": [{"row": 1, "col": 0}, {"row": 1, "col": 1}],
-        "climb": [{"row": 0, "col": 5}, {"row": 0, "col": 6}],
-        "cheer": [{"row": 0, "col": 7}, {"row": 0, "col": 8}],
-        "swim": [{"row": 1, "col": 7}, {"row": 1, "col": 8}]
+        "walk": [
+            {"row": 1, "col": 0, "duration": 100},
+            {"row": 1, "col": 1, "duration": 100}
+        ],
+        "climb": [
+            {"row": 0, "col": 5, "duration": 100},
+            {"row": 0, "col": 6, "duration": 100}
+        ],
+        "cheer": [
+            {"row": 0, "col": 7, "duration": 100},
+            {"row": 0, "col": 8, "duration": 100}
+        ],
+        "swim": [
+            {"row": 1, "col": 7, "duration": 100},
+            {"row": 1, "col": 8, "duration": 100}
+        ]
     }
 }
