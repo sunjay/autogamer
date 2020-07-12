@@ -14,6 +14,11 @@ class PlayScreen(LevelScreen):
         # Configure gravity in the physics engine
         self.level.physics.set_gravity((0.0, -9.81))
 
+        player_sprites = CharacterSpritesheet(
+            "images/character/female.png",
+            "images/character/character.json",
+        );
+
         # Add a player to the game
         player = self.level.add_player()
         player.add(PlatformerControls(

@@ -10,6 +10,7 @@ mod level;
 mod physics;
 mod ui;
 mod tile_map;
+mod spritesheets;
 
 use entity::*;
 use renderer::*;
@@ -21,6 +22,7 @@ use level::*;
 use physics::*;
 use ui::*;
 use tile_map::*;
+use spritesheets::*;
 
 use pyo3::prelude::*;
 
@@ -34,6 +36,7 @@ pub fn autogamer_bindings(_py: Python, pymod: &PyModule) -> PyResult<()> {
     pymod.add_class::<Physics>()?;
     pymod.add_class::<Entity>()?;
     pymod.add_class::<TileMap>()?;
+    pymod.add_class::<CharacterSpritesheet>()?;
 
     add_components(pymod)?;
 

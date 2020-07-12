@@ -6,6 +6,7 @@ __all__ = [
     "Physics",
     "Entity",
     "TileMap",
+    "CharacterSpritesheet",
 
     # Components
     "Player",

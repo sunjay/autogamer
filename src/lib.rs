@@ -11,6 +11,7 @@ mod layers;
 mod level;
 mod components;
 mod component_templates;
+mod spritesheets;
 
 pub use math::*;
 pub use event::*;
@@ -23,3 +24,4 @@ pub use layers::*;
 pub use level::*;
 pub use components::*;
 pub use component_templates::*;
+pub use spritesheets::*;
