@@ -39,6 +39,7 @@ use crate::{
     SdlError,
     Align,
     EventStream,
+    EventStreamSource,
     EventKind,
 };
 
@@ -120,6 +121,8 @@ pub struct Level {
     background_color: Color,
     /// True if load() has completed successfully
     loaded: bool,
+    /// The event stream (stored in the level to reuse its allocation)
+    events: EventStream,
 }
 
 impl fmt::Debug for Level {
@@ -132,6 +135,7 @@ impl fmt::Debug for Level {
             extra_layers,
             background_color,
             loaded,
+            events,
         } = self;
 
         f.debug_struct("Level")
@@ -143,6 +147,7 @@ impl fmt::Debug for Level {
             .field("extra_layers", &extra_layers)
             .field("background_color", &background_color)
             .field("loaded", &loaded)
+            .field("events", &events)
             .finish()
     }
 }
@@ -165,7 +170,12 @@ impl Level {
             extra_layers: ExtraLayers::default(),
             background_color: Color::BLACK,
             loaded: false,
+            events: EventStream::default(),
         }
+    }
+
+    pub fn refill_events<E: EventStreamSource>(&mut self, events: &E) {
+        self.events.refill(events)
     }
 
     pub fn world_mut(&mut self) -> &mut World {
@@ -186,6 +196,7 @@ impl Level {
             tile_size,
             background_color,
             loaded,
+            events: _,
         } = self;
 
         if *loaded {
@@ -254,11 +265,12 @@ impl Level {
     }
 
     pub fn update<E>(&mut self, events: &E, physics: &mut Physics)
-        where E: EventStream,
+        where E: EventStreamSource,
     {
+        self.refill_events(events);
         //TODO: Update world via dispatcher
         //TODO: Update physics + physics step + copy changes back to ECS
-        events.for_each_event(|event| {
+        for event in self.events.iter() {
             let viewport = &mut self.viewport;
             use crate::Key;
             match event.kind() {
@@ -276,7 +288,7 @@ impl Level {
                 },
                 _ => {},
             }
-        });
+        }
     }
 
     pub fn draw(&self, renderer: &mut Renderer) -> Result<(), SdlError> {
@@ -288,6 +300,7 @@ impl Level {
             ref extra_layers,
             background_color,
             loaded: _,
+            events: _,
         } = *self;
 
         let Size {width, height} = renderer.size();

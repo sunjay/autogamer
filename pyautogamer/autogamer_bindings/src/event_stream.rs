@@ -60,7 +60,11 @@ impl Extend<Py<Event>> for EventStream {
     }
 }
 
-impl ag::EventStream for EventStream {
+impl ag::EventStreamSource for EventStream {
+    fn len(&self) -> usize {
+        self.events.len()
+    }
+
     fn for_each_event<F>(&self, mut f: F)
         where F: FnMut(&mut ag::Event)
     {
