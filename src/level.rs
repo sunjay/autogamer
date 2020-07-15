@@ -42,6 +42,7 @@ use crate::{
     EventStream,
     EventStreamSource,
     EventKind,
+    Modifiers,
 };
 
 use load_tilesets::load_tilesets;
@@ -277,17 +278,37 @@ impl Level {
             let viewport = &mut self.viewport;
             use crate::Key;
             match event.kind() {
-                EventKind::KeyDown {key: Key::Up, ..} => {
+                EventKind::KeyDown {
+                    key: Key::Up,
+                    modifiers: Modifiers {ctrl_pressed: true, ..},
+                    ..
+                } => {
                     viewport.set_y(viewport.y() - 35);
+                    event.stop_propagation();
                 },
-                EventKind::KeyDown {key: Key::Down, ..} => {
+                EventKind::KeyDown {
+                    key: Key::Down,
+                    modifiers: Modifiers {ctrl_pressed: true, ..},
+                    ..
+                } => {
                     viewport.set_y(viewport.y() + 35);
+                    event.stop_propagation();
                 },
-                EventKind::KeyDown {key: Key::Left, ..} => {
+                EventKind::KeyDown {
+                    key: Key::Left,
+                    modifiers: Modifiers {ctrl_pressed: true, ..},
+                    ..
+                } => {
                     viewport.set_x(viewport.x() - 35);
+                    event.stop_propagation();
                 },
-                EventKind::KeyDown {key: Key::Right, ..} => {
+                EventKind::KeyDown {
+                    key: Key::Right,
+                    modifiers: Modifiers {ctrl_pressed: true, ..},
+                    ..
+                } => {
                     viewport.set_x(viewport.x() + 35);
+                    event.stop_propagation();
                 },
                 _ => {},
             }
