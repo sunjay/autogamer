@@ -177,14 +177,6 @@ impl Level {
         }
     }
 
-    pub fn tile_size(&self) -> Option<Size> {
-        if self.loaded {
-            Some(self.tile_size)
-        } else {
-            None
-        }
-    }
-
     pub fn refill_events<E: EventStreamSource>(&mut self, events: &E) {
         self.events.refill(events)
     }

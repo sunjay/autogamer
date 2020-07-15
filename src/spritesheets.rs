@@ -97,7 +97,7 @@ impl CharacterSpritesheet {
         Ok(Self {spritesheet, config})
     }
 
-    pub fn load(&self, image_cache: &mut ImageCache, tile_size: Size) -> Result<CharacterSprites, LoadSpritesError> {
+    pub fn load(&self, image_cache: &mut ImageCache) -> Result<CharacterSprites, LoadSpritesError> {
         let id = image_cache.add(&self.spritesheet);
 
         let make_image = |src, size| {
