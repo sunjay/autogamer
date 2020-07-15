@@ -15,6 +15,7 @@ components! {
     Position,
     Player,
     Sprite,
+    CharacterSprites,
     PlatformerControls,
     Health,
     ViewportTarget,
@@ -55,6 +56,18 @@ pub struct Sprite {
     /// The order in which the sprite should be drawn. Sprites with a higher
     /// draw order will be drawn above sprites with a lower draw order.
     pub draw_order: u8,
+}
+
+#[derive(Component, Debug, Clone, PartialEq)]
+#[storage(HashMapStorage)]
+pub struct CharacterSprites {
+    pub idle: Option<Sprite>,
+}
+
+impl CharacterSprites {
+    pub fn default_sprite(&self) -> Option<Sprite> {
+        self.idle.clone()
+    }
 }
 
 /// An entity with this component will respond to arrow key presses by setting

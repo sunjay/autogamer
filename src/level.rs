@@ -49,9 +49,11 @@ use load_layers::load_layers;
 use load_objects::load_objects;
 
 /// The draw order value of tiles inserted into the world from the map layer
-const TILE_DRAW_ORDER: u8 = 0;
+pub(crate) const TILE_DRAW_ORDER: u8 = 0;
 /// The draw order value of objects inserted into the world from objects
-const OBJECT_DRAW_ORDER: u8 = 1;
+pub(crate) const OBJECT_DRAW_ORDER: u8 = 1;
+/// The draw order value of sprites inserted into the world from character spritesheets
+pub(crate) const CHARACTER_DRAW_ORDER: u8 = 2;
 
 #[derive(Debug, Error)]
 #[error(transparent)]
