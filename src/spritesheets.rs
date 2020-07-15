@@ -102,7 +102,7 @@ impl CharacterSpritesheet {
 
         let make_image = |src, size| {
             let src = Some(src);
-            let align = Align::default();
+            let align = Align::Bottom;
             let params = ImageParams {
                 size,
                 flip_horizontal: false,
@@ -130,7 +130,8 @@ impl CharacterSpritesheet {
                     };
 
                     let image = make_image(src, size);
-                    let align_size = size;
+                    // align the sprite directly with the position
+                    let align_size = Size {width: 0, height: 0};
                     let pivot = None;
                     let draw_order = CHARACTER_DRAW_ORDER;
 
