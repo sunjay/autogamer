@@ -1,7 +1,7 @@
 {
     "layout": "grid",
-    "tile_width": 70,
-    "tile_height": 96,
+    "cell_width": 70,
+    "cell_height": 96,
     "characters": {
         "beige": {
             "poses": {

@@ -20,7 +20,7 @@ use crate::{
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-struct TilePos {
+struct CellPos {
     /// The index of a row in the spritesheet
     pub row: u32,
     /// The index of a column in the spritesheet
@@ -41,18 +41,18 @@ struct Frame {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Poses {
-    pub idle: Option<TilePos>,
-    pub jump_midair: Option<TilePos>,
-    pub fall_midair: Option<TilePos>,
-    pub crouch: Option<TilePos>,
-    pub hurt: Option<TilePos>,
-    pub kick: Option<TilePos>,
-    pub talk: Option<TilePos>,
-    pub slide: Option<TilePos>,
-    pub hang: Option<TilePos>,
-    pub skid: Option<TilePos>,
-    pub back: Option<TilePos>,
-    pub stand: Option<TilePos>,
+    pub idle: Option<CellPos>,
+    pub jump_midair: Option<CellPos>,
+    pub fall_midair: Option<CellPos>,
+    pub crouch: Option<CellPos>,
+    pub hurt: Option<CellPos>,
+    pub kick: Option<CellPos>,
+    pub talk: Option<CellPos>,
+    pub slide: Option<CellPos>,
+    pub hang: Option<CellPos>,
+    pub skid: Option<CellPos>,
+    pub back: Option<CellPos>,
+    pub stand: Option<CellPos>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -70,8 +70,8 @@ struct Animations {
 #[serde(deny_unknown_fields)]
 enum SpritesheetConfig {
     Grid {
-        tile_width: u32,
-        tile_height: u32,
+        cell_width: u32,
+        cell_height: u32,
         poses: Poses,
         animations: Animations,
     },
@@ -115,18 +115,18 @@ impl CharacterSpritesheet {
 
         use SpritesheetConfig::*;
         match &self.config {
-            &Grid {tile_width, tile_height, ref poses, ref animations} => {
-                let grid_sprite = |TilePos {row, col}| {
+            &Grid {cell_width, cell_height, ref poses, ref animations} => {
+                let grid_sprite = |CellPos {row, col}| {
                     let src = Rect::new(
-                        (col * tile_width) as i32,
-                        (row * tile_height) as i32,
-                        tile_width,
-                        tile_height,
+                        (col * cell_width) as i32,
+                        (row * cell_height) as i32,
+                        cell_width,
+                        cell_height,
                     );
 
                     let size = Size {
-                        width: tile_width,
-                        height: tile_height,
+                        width: cell_width,
+                        height: cell_height,
                     };
 
                     let image = make_image(src, size);
