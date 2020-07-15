@@ -12,8 +12,8 @@ macro_rules! components {
 }
 
 components! {
-    Position,
     Player,
+    Position,
     Sprite,
     CharacterSprites,
     PlatformerControls,
@@ -22,17 +22,17 @@ components! {
     Currency,
 }
 
-/// The position of an entity in world coordinates
-#[derive(Component, Debug, Clone, PartialEq)]
-#[storage(VecStorage)]
-pub struct Position(pub Vec2);
-
 /// A marker component given to an entity to indicate that it represents one of
 /// the players of the game. This component is automatically added when you call
 /// `Game.add_player`.
 #[derive(Component, Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 #[storage(HashMapStorage)]
 pub struct Player;
+
+/// The position of an entity in world coordinates
+#[derive(Component, Debug, Clone, PartialEq)]
+#[storage(VecStorage)]
+pub struct Position(pub Vec2);
 
 /// Defines the image that an entity should be drawn with
 ///

@@ -32,6 +32,8 @@ macro_rules! components {
 components! {
     Player,
     Position,
+    Sprite,
+    CharacterSprites,
     PlatformerControls,
     Health,
     ViewportTarget,
@@ -96,6 +98,37 @@ impl Position {
     //pub fn set_y(&mut self, y: f64) {
     //    self.component.0.y = y;
     //}
+}
+
+#[pyclass]
+#[derive(Debug, Clone)]
+pub struct Sprite {
+    component: ag::Sprite,
+}
+
+impl From<ag::Sprite> for Sprite {
+    fn from(component: ag::Sprite) -> Self {
+        Self {component}
+    }
+}
+
+#[pyclass]
+#[derive(Debug, Clone)]
+pub struct CharacterSprites {
+    component: ag::CharacterSprites,
+}
+
+impl From<ag::CharacterSprites> for CharacterSprites {
+    fn from(component: ag::CharacterSprites) -> Self {
+        Self {component}
+    }
+}
+
+#[pymethods]
+impl CharacterSprites {
+    pub fn default_sprite(&self) -> Option<Sprite> {
+        self.component.default_sprite().map(Into::into)
+    }
 }
 
 /// An entity with this component will respond to arrow key presses by setting

@@ -10,6 +10,16 @@ pub struct CharacterSpritesheet {
     spritesheet: ag::CharacterSpritesheet,
 }
 
+impl CharacterSpritesheet {
+    pub fn inner(&self) -> &ag::CharacterSpritesheet {
+        &self.spritesheet
+    }
+
+    pub fn inner_mut(&mut self) -> &mut ag::CharacterSpritesheet {
+        &mut self.spritesheet
+    }
+}
+
 #[pymethods]
 impl CharacterSpritesheet {
     #[new]

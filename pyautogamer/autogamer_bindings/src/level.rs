@@ -94,6 +94,17 @@ impl Level {
         ).map_err(|err| ValueError::py_err(err.to_string()))
     }
 
+    pub fn load_sprites(&mut self, sheet: &CharacterSpritesheet) -> PyResult<CharacterSprites> {
+        let gil = GILGuard::acquire();
+        let py = gil.python();
+
+        let mut game = self.game.borrow_mut(py);
+        let mut image_cache = game.inner_mut().image_cache_mut();
+
+        sheet.inner().load(&mut image_cache).map(Into::into)
+            .map_err(|err| ValueError::py_err(err.to_string()))
+    }
+
     /// Sets the dimensions of the viewport to the given values
     //TODO(PyO3/pyo3#1025): These should be keyword-only arguments with no defaults
     #[args("*", width=1, height=1)]

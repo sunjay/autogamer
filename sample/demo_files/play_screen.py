@@ -14,10 +14,11 @@ class PlayScreen(LevelScreen):
         # Configure gravity in the physics engine
         self.level.physics.set_gravity((0.0, -9.81))
 
-        player_sprites = CharacterSpritesheet(
+        player_spritesheet = CharacterSpritesheet(
             "images/character/female.png",
             "images/character/character.json",
-        );
+        )
+        player_sprites = self.level.load_sprites(player_spritesheet)
 
         # Add a player to the game
         player = self.level.add_player()
@@ -28,6 +29,8 @@ class PlayScreen(LevelScreen):
         ))
         player.add(Health(6))
         player.add(ViewportTarget())
+        player.add(player_sprites.default_sprite())
+        player.add(player_sprites)
 
         self.level.set_viewport_dimensions(
             width=level1_map.tile_width * 16,
