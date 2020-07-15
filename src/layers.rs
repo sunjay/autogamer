@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use noisy_float::types::R64;
+use sdl2::rect::Rect;
 
 use crate::{Size, Vec2, TileId, ImageId};
 
@@ -83,6 +84,10 @@ pub struct Image {
     /// The ID of the image in the renderer image cache (for quick lookups
     /// without needing to store the path here)
     pub id: ImageId,
+    /// The region of the image to draw
+    ///
+    /// If `None`, the entire image is drawn.
+    pub src: Option<Rect>,
     /// Defines the alignment of the image
     ///
     /// See the documentation on the `Align` type for more info.
@@ -93,10 +98,8 @@ pub struct Image {
 
 /// Additional parameters used when rendering an image
 ///
-/// When rendering, the diagonal flip (x/y axis swap) is done first,
-/// followed by the horizontal and vertical flips.
-///
-/// See: https://doc.mapeditor.org/en/stable/reference/tmx-map-format/#tile-flipping
+/// Flips are performed before rotation. Rotation is performed around the
+/// center of the image being drawn.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ImageParams {
     /// The size in pixels at which to draw the image (can be different from the
@@ -106,10 +109,10 @@ pub struct ImageParams {
     pub flip_horizontal: bool,
     /// true if the image should be flipped vertically
     pub flip_vertical: bool,
-    /// true if the image should be flipped along its diagonal
-    pub flip_diagonal: bool,
-    /// The opacity with which to draw the image (between 0.0 and 1.0)
-    pub opacity: R64,
+    /// The angle in degrees by which to rotate the image clockwise
+    pub angle: R64,
+    /// The alpha with which to draw the image (between 0 and 255)
+    pub alpha: u8,
 }
 
 #[derive(Debug)]

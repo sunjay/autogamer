@@ -1,3 +1,4 @@
+mod image_params;
 mod load_tilesets;
 mod load_layers;
 mod load_objects;
@@ -338,13 +339,14 @@ impl Level {
 
         for (Position(world_pos), sprite) in (&positions, &sprites).join() {
             let &world_pos = world_pos;
-            let &Sprite {ref image, align_size, draw_order} = sprite;
+            let &Sprite {ref image, align_size, pivot, draw_order} = sprite;
 
             draw_image(
                 renderer,
                 image,
                 world_pos,
                 align_size,
+                pivot,
                 screen_viewport,
                 (scale_x, scale_y),
             )?;
@@ -399,6 +401,10 @@ fn draw_layer(
                 image,
                 world_pos,
                 tile_size,
+                // Tiles should rotate about the center of their image
+                //TODO: This probably won't work...we need to rotate and then
+                // translate to move back to the right position (so align is enforced)
+                None,
                 screen_viewport,
                 (scale_x, scale_y),
             )?;
@@ -416,11 +422,13 @@ fn draw_image(
     image: &Image,
     world_pos: Vec2,
     world_size: Size,
+    pivot: Option<Point>,
     screen_viewport: Rect,
     (scale_x, scale_y): (f64, f64),
 ) -> Result<(), SdlError> {
     let &Image {
         id,
+        src,
         align,
         ref params,
     } = image;
@@ -504,6 +512,8 @@ fn draw_image(
 
         renderer.draw_image(
             id,
+            src,
+            pivot,
             params,
             // Position is relative to the top left of the viewport
             image_screen_rect.top_left() - screen_viewport.top_left(),

@@ -1,7 +1,7 @@
-use std::convert::TryInto;
 use std::collections::HashMap;
 
 use specs::{World, WorldExt, Builder};
+use noisy_float::types::R64;
 
 use crate::{
     Size,
@@ -17,7 +17,7 @@ use crate::{
     Position,
 };
 
-use super::{TILE_DRAW_ORDER, TileId, LoadError};
+use super::{TILE_DRAW_ORDER, TileId, LoadError, image_params::TiledImageParams};
 
 pub fn load_layers(
     nrows: u32,
@@ -113,6 +113,7 @@ fn load_map_layer(
             let sprite = Sprite {
                 image,
                 align_size: tile_size,
+                pivot: None,
                 draw_order: TILE_DRAW_ORDER,
             };
 
@@ -179,6 +180,12 @@ fn process_layer_tile<'a>(
         flip_d: flip_diagonal,
     } = tile;
 
+    let base_params = TiledImageParams {
+        flip_horizontal,
+        flip_vertical,
+        flip_diagonal,
+    }.normalize();
+
     // Tiled global IDs always start at 1, so 0 is used to indicate an
     // empty tile
     if gid == 0 {
@@ -196,14 +203,14 @@ fn process_layer_tile<'a>(
 
     let image = Image {
         id: image_id,
+        src: None,
         align,
         params: ImageParams {
             size,
-            flip_horizontal,
-            flip_vertical,
-            flip_diagonal,
-            opacity: opacity.try_into()
-                .expect("opacity should have been between 0.0 and 1.0"),
+            flip_horizontal: base_params.flip_horizontal,
+            flip_vertical: base_params.flip_vertical,
+            angle: R64::new(base_params.angle),
+            alpha: (opacity * u8::MAX as f64).round() as u8,
         },
     };
 

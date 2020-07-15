@@ -1,4 +1,5 @@
 use specs::{World, WorldExt, Component, VecStorage, HashMapStorage};
+use sdl2::rect::Point;
 
 use crate::{Vec2, Image, Size};
 
@@ -46,6 +47,11 @@ pub struct Sprite {
     /// The position of this entity is considered the top left corner of the
     /// rectangle used for alignment.
     pub align_size: Size,
+    /// The pivot point to rotate the image around, relative to the position of
+    /// this entity.
+    ///
+    /// If `None`, the image is rotated about its center.
+    pub pivot: Option<Point>,
     /// The order in which the sprite should be drawn. Sprites with a higher
     /// draw order will be drawn above sprites with a lower draw order.
     pub draw_order: u8,

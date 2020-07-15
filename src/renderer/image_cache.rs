@@ -45,7 +45,7 @@ impl CachedImage {
         &mut self,
         texture_creator: &mut TextureCreator<WindowContext>,
         params: ImageParams,
-    ) -> Result<&Texture, SdlError> {
+    ) -> Result<&mut Texture, SdlError> {
         if !self.params_cache.contains_key(&params) {
             let tex = self.base_image(texture_creator)?;
             //TODO: Use params to generate another image and insert it into the cache
@@ -53,20 +53,20 @@ impl CachedImage {
         }
 
         // This unwrap is safe because the code above inserts the texture
-        Ok(self.params_cache.get(&params).unwrap())
+        Ok(self.params_cache.get_mut(&params).unwrap())
     }
 
     pub fn base_image(
         &mut self,
         texture_creator: &mut TextureCreator<WindowContext>,
-    ) -> Result<&Texture, SdlError> {
+    ) -> Result<&mut Texture, SdlError> {
         if self.base_image.is_none() {
             let tex = texture_creator.load_texture(&self.path)?;
             self.base_image = Some(tex);
         }
 
         // This unwrap is safe because the code above loads the texture
-        Ok(self.base_image.as_ref().unwrap())
+        Ok(self.base_image.as_mut().unwrap())
     }
 
     pub fn invalidate(&mut self) {
@@ -142,7 +142,7 @@ impl ImageCache {
     ///
     /// The image is cached so no loading is necessary when the same image with
     /// the same parameters is loaded.
-    pub fn load(&mut self, image: ImageId, params: ImageParams) -> Result<&Texture, SdlError> {
+    pub fn load(&mut self, image: ImageId, params: ImageParams) -> Result<&mut Texture, SdlError> {
         let texture_creator = self.texture_creator.as_mut()
             .expect("attempt to load images before texture creator was setup");
 

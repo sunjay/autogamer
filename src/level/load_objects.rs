@@ -1,7 +1,8 @@
 use std::collections::HashMap;
-use std::convert::TryInto;
 
 use specs::{World, WorldExt, Builder};
+use noisy_float::types::R64;
+use sdl2::rect::Point;
 
 use crate::{
     Size,
@@ -16,7 +17,7 @@ use crate::{
     JointHashMap,
 };
 
-use super::{LoadError, TileId, OBJECT_DRAW_ORDER};
+use super::{LoadError, TileId, OBJECT_DRAW_ORDER, image_params::TiledImageParams};
 
 pub fn load_objects(
     object_groups: &[tiled::ObjectGroup],
@@ -57,14 +58,6 @@ pub fn load_objects(
                 ref properties,
             } = object;
 
-            //TODO: Tiled sometimes uses rotation to simulate flips **instead**
-            // of using the horizontal or vertical flip properties.
-            // (e.g. pressing the horizontal flip button will sometimes result
-            // in rotation = 180 and flip_vertical = true)
-            if rotation != 0.0 {
-                println!("Warning: rotation field on objects is not supported yet (ID = {})", id);
-            }
-
             let world_pos = Vec2::new(
                 x as f64 + layer_offset.x,
                 y as f64 + layer_offset.y,
@@ -103,6 +96,12 @@ pub fn load_objects(
                 // Flip tile over x axis
                 let flip_vertical = flags & FLIPPED_VERTICALLY_FLAG == FLIPPED_VERTICALLY_FLAG;
 
+                let base_params = TiledImageParams {
+                    flip_horizontal,
+                    flip_vertical,
+                    flip_diagonal,
+                }.normalize();
+
                 let tile_id = TileId(gid);
                 let tile = &tiles[&tile_id];
 
@@ -114,14 +113,14 @@ pub fn load_objects(
 
                 let image = Image {
                     id: image_id,
+                    src: None,
                     align,
                     params: ImageParams {
                         size,
-                        flip_horizontal,
-                        flip_vertical,
-                        flip_diagonal,
-                        opacity: opacity.try_into()
-                            .expect("opacity should have been between 0.0 and 1.0"),
+                        flip_horizontal: base_params.flip_horizontal,
+                        flip_vertical: base_params.flip_vertical,
+                        angle: R64::new(rotation as f64 + base_params.angle),
+                        alpha: (opacity * u8::MAX as f64).round() as u8,
                     },
                 };
 
@@ -191,6 +190,8 @@ fn apply_tile_object_templates(
     let sprite = Sprite {
         image,
         align_size,
+        // Tile objects rotate about their position with no additional offset
+        pivot: Some(Point::new(0, 0)),
         draw_order: OBJECT_DRAW_ORDER,
     };
 

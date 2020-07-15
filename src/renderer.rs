@@ -54,10 +54,19 @@ impl Renderer {
     pub fn draw_image(
         &mut self,
         image: ImageId,
+        src: Option<Rect>,
+        pivot: Option<Point>,
         params: ImageParams,
         top_left: Point,
     ) -> Result<(), SdlError> {
-        let size = params.size;
+        let ImageParams {
+            size,
+            flip_horizontal,
+            flip_vertical,
+            angle,
+            alpha,
+        } = params;
+
         let dest = Rect::new(
             top_left.x(),
             top_left.y(),
@@ -68,7 +77,20 @@ impl Renderer {
         let mut image_cache = self.image_cache.lock();
         let tex = image_cache.load(image, params)?;
 
-        self.canvas.copy(tex, None, dest)?;
+        let prev_alpha_mod = tex.alpha_mod();
+        tex.set_alpha_mod(alpha);
+
+        self.canvas.copy_ex(
+            tex,
+            src,
+            dest,
+            angle.into(),
+            pivot,
+            flip_horizontal,
+            flip_vertical,
+        )?;
+
+        tex.set_alpha_mod(prev_alpha_mod);
 
         Ok(())
     }
