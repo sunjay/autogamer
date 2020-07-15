@@ -33,7 +33,7 @@ pub fn autogamer_bindings(_py: Python, pymod: &PyModule) -> PyResult<()> {
 
     pymod.add_class::<Game>()?;
     pymod.add_class::<Level>()?;
-    pymod.add_class::<Physics>()?;
+    pymod.add_class::<PhysicsEngine>()?;
     pymod.add_class::<Entity>()?;
     pymod.add_class::<TileMap>()?;
     pymod.add_class::<CharacterSpritesheet>()?;

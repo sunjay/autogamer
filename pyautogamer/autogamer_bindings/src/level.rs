@@ -16,7 +16,7 @@ pub struct Level {
     level: Arc<Mutex<ag::Level>>,
     game: Py<Game>,
     #[pyo3(get)]
-    physics: Py<Physics>,
+    physics: Py<PhysicsEngine>,
 }
 
 #[pyproto]
@@ -60,7 +60,7 @@ impl Level {
         let level = ag::Level::new(game.borrow(py).inner());
         let level = Arc::new(Mutex::new(level));
 
-        let physics = Py::new(py, Physics::new())?;
+        let physics = Py::new(py, PhysicsEngine::new())?;
 
         let base = Screen::new(game.clone());
 

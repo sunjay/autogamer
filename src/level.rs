@@ -25,7 +25,7 @@ use crate::{
     Game,
     TileMap,
     Size,
-    Physics,
+    PhysicsEngine,
     Player,
     Position,
     Sprite,
@@ -265,7 +265,7 @@ impl Level {
         self.viewport.set_height(height);
     }
 
-    pub fn update<E>(&mut self, events: &E, physics: &mut Physics)
+    pub fn update<E>(&mut self, events: &E, physics: &mut PhysicsEngine)
         where E: EventStreamSource,
     {
         // Update events

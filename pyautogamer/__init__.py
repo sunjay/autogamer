@@ -3,7 +3,7 @@ from .autogamer_bindings import *
 __all__ = [
     "Game",
     "Level",
-    "Physics",
+    "PhysicsEngine",
     "Entity",
     "TileMap",
     "CharacterSpritesheet",

@@ -3,26 +3,26 @@ use pyo3::prelude::*;
 
 #[pyclass]
 #[derive(Debug)]
-pub struct Physics {
-    physics: ag::Physics,
+pub struct PhysicsEngine {
+    physics: ag::PhysicsEngine,
 }
 
-impl Physics {
-    pub fn inner(&self) -> &ag::Physics {
+impl PhysicsEngine {
+    pub fn inner(&self) -> &ag::PhysicsEngine {
         &self.physics
     }
 
-    pub fn inner_mut(&mut self) -> &mut ag::Physics {
+    pub fn inner_mut(&mut self) -> &mut ag::PhysicsEngine {
         &mut self.physics
     }
 }
 
 #[pymethods]
-impl Physics {
+impl PhysicsEngine {
     #[new]
     pub fn new() -> Self {
         Self {
-            physics: ag::Physics::new(),
+            physics: ag::PhysicsEngine::new(),
         }
     }
 

@@ -7,7 +7,7 @@ use nphysics2d::world::{DefaultMechanicalWorld, DefaultGeometricalWorld};
 
 use crate::math::Vec2;
 
-pub struct Physics {
+pub struct PhysicsEngine {
     mechanical_world: DefaultMechanicalWorld<f64>,
     geometrical_world: DefaultGeometricalWorld<f64>,
     bodies: DefaultBodySet<f64>,
@@ -16,13 +16,13 @@ pub struct Physics {
     force_generators: DefaultForceGeneratorSet<f64>,
 }
 
-impl fmt::Debug for Physics {
+impl fmt::Debug for PhysicsEngine {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Physics {{ ... }}")
+        write!(f, "PhysicsEngine {{ ... }}")
     }
 }
 
-impl Physics {
+impl PhysicsEngine {
     pub fn new() -> Self {
         Self {
             mechanical_world: DefaultMechanicalWorld::new(Vec2::new(0.0, 0.0)),
