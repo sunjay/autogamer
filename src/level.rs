@@ -43,6 +43,7 @@ use crate::{
     EventStreamSource,
     EventKind,
     Modifiers,
+    Systems,
 };
 
 use load_tilesets::load_tilesets;
@@ -116,6 +117,7 @@ struct RenderData<'a> {
 
 pub struct Level {
     world: World,
+    systems: Systems,
     /// The area of the world (in world coordinates) that will be drawn by the
     /// renderer and scaled to fit in the window
     viewport: Rect,
@@ -125,33 +127,30 @@ pub struct Level {
     background_color: Color,
     /// True if load() has completed successfully
     loaded: bool,
-    /// The event stream (stored in the level to reuse its allocation)
-    events: EventStream,
 }
 
 impl fmt::Debug for Level {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let Self {
             world: _,
+            systems: _,
             viewport,
             level_start,
             tile_size,
             extra_layers,
             background_color,
             loaded,
-            events,
         } = self;
 
         f.debug_struct("Level")
-            // World doesn't implement Debug
-            .field("world", &"World")
+            .field("world", &"World {..}")
+            .field("systems", &"Systems {..}")
             .field("viewport", &viewport)
             .field("level_start", &level_start)
             .field("tile_size", &tile_size)
             .field("extra_layers", &extra_layers)
             .field("background_color", &background_color)
             .field("loaded", &loaded)
-            .field("events", &events)
             .finish()
     }
 }
@@ -160,9 +159,12 @@ impl Level {
     pub fn new(game: &Game) -> Self {
         let mut world = World::new();
         crate::register_components(&mut world);
+        // Setup resources
+        world.insert(EventStream::default());
 
         Self {
             world,
+            systems: Systems::default(),
             viewport: Rect::new(
                 0,
                 0,
@@ -174,12 +176,7 @@ impl Level {
             extra_layers: ExtraLayers::default(),
             background_color: Color::BLACK,
             loaded: false,
-            events: EventStream::default(),
         }
-    }
-
-    pub fn refill_events<E: EventStreamSource>(&mut self, events: &E) {
-        self.events.refill(events)
     }
 
     pub fn world_mut(&mut self) -> &mut World {
@@ -194,13 +191,13 @@ impl Level {
     ) -> Result<(), LoadError> {
         let Self {
             world,
+            systems: _,
             viewport: _,
             level_start,
             extra_layers,
             tile_size,
             background_color,
             loaded,
-            events: _,
         } = self;
 
         if *loaded {
@@ -271,10 +268,21 @@ impl Level {
     pub fn update<E>(&mut self, events: &E, physics: &mut Physics)
         where E: EventStreamSource,
     {
-        self.refill_events(events);
-        //TODO: Update world via dispatcher
+        // Update events
+        self.world.write_resource::<EventStream>().refill(events);
+        // Allow debug controls to handle events first (and potentially override
+        // game behaviour)
+        self.handle_debug_controls();
+
+        // Run dispatcher
+        self.systems.run(&mut self.world);
+
         //TODO: Update physics + physics step + copy changes back to ECS
-        for event in self.events.iter() {
+    }
+
+    fn handle_debug_controls(&mut self) {
+        let events = self.world.read_resource::<EventStream>();
+        for event in events.iter() {
             let viewport = &mut self.viewport;
             use crate::Key;
             match event.kind() {
@@ -318,13 +326,13 @@ impl Level {
     pub fn draw(&self, renderer: &mut Renderer) -> Result<(), SdlError> {
         let Self {
             ref world,
+            systems: _,
             viewport,
             level_start: _,
             tile_size,
             ref extra_layers,
             background_color,
             loaded: _,
-            events: _,
         } = *self;
 
         let Size {width, height} = renderer.size();
