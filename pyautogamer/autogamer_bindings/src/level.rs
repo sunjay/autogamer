@@ -101,7 +101,10 @@ impl Level {
         let mut game = self.game.borrow_mut(py);
         let mut image_cache = game.inner_mut().image_cache_mut();
 
-        sheet.inner().load(&mut image_cache).map(Into::into)
+        let tile_size = self.level.lock().tile_size()
+            .ok_or_else(|| ValueError::py_err("Spritesheets can only be loaded after a map has been loaded through Level.load"))?;
+
+        sheet.inner().load(&mut image_cache, tile_size).map(Into::into)
             .map_err(|err| ValueError::py_err(err.to_string()))
     }
 
