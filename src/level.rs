@@ -519,7 +519,6 @@ fn draw_image(
             params,
             // Position is relative to the top left of the viewport
             image_screen_rect.top_left() - screen_viewport.top_left(),
-            screen_pos - screen_viewport.top_left(),
         )?;
     }
 

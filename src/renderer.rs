@@ -58,7 +58,6 @@ impl Renderer {
         pivot: Option<Point>,
         params: ImageParams,
         top_left: Point,
-        pos: Point,
     ) -> Result<(), SdlError> {
         let ImageParams {
             size,
@@ -90,10 +89,6 @@ impl Renderer {
             flip_horizontal,
             flip_vertical,
         )?;
-        self.canvas.set_draw_color((255, 0, 0));
-        self.canvas.draw_rect(dest)?;
-
-        self.canvas.fill_rect(Rect::from_center(pos, 10, 10))?;
 
         tex.set_alpha_mod(prev_alpha_mod);
 
