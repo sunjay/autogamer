@@ -62,11 +62,11 @@ impl<'a> Iterator for EventStreamIterator<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
-            let item = self.events.get(0)?;
+            let event = self.events.get(0)?;
             self.events = &self.events[1..];
 
-            if item.should_propagate() {
-                break Some(item);
+            if event.should_propagate() {
+                break Some(event);
             }
         }
     }

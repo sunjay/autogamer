@@ -72,7 +72,10 @@ impl ag::EventStreamSource for EventStream {
         let py = gil.python();
         for event in &self.events {
             let mut event = event.borrow_mut(py);
-            f(event.inner_mut());
+            let event = event.inner_mut();
+            if event.should_propagate() {
+                f(event);
+            }
         }
     }
 }
@@ -90,7 +93,7 @@ impl PyIterProtocol for EventStreamIter {
     }
 
     fn __next__(mut slf: PyRefMut<Self>) -> Option<Py<Event>> {
-        slf.inner.next()
+        slf.next()
     }
 }
 
@@ -104,6 +107,14 @@ impl Iterator for EventStreamIter {
     type Item = Py<Event>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.inner.next()
+        loop {
+            let event = self.inner.next()?;
+
+            let gil = GILGuard::acquire();
+            let py = gil.python();
+            if event.borrow(py).inner().should_propagate() {
+                break Some(event);
+            }
+        }
     }
 }
