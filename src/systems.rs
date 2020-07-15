@@ -5,8 +5,8 @@ use specs::{World, System};
 
 #[derive(Default)]
 pub struct Systems {
-    keyboard: keyboard::Keyboard,
-    physics: physics::Physics,
+    pub keyboard: keyboard::Keyboard,
+    pub physics: physics::Physics,
 }
 
 impl Systems {

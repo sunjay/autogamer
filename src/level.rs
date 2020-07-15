@@ -274,10 +274,11 @@ impl Level {
         // game behaviour)
         self.handle_debug_controls();
 
+        // Update physics parameters
+        self.systems.physics.set_gravity(physics.gravity());
+
         // Run dispatcher
         self.systems.run(&mut self.world);
-
-        //TODO: Update physics + physics step + copy changes back to ECS
     }
 
     fn handle_debug_controls(&mut self) {
