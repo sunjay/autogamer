@@ -1,7 +1,24 @@
-use specs::{World, WorldExt, Component, VecStorage, HashMapStorage};
+use specs::{World, WorldExt, Component, VecStorage, HashMapStorage, FlaggedStorage};
+use nphysics2d::{
+    ncollide2d::pipeline::CollisionGroups,
+    object::{BodyStatus, DefaultBodyHandle, DefaultColliderHandle, Body},
+    math::ForceType,
+};
 use sdl2::rect::Point;
 
-use crate::{Vec2, Image, Size};
+use crate::{
+    Vec2,
+    Velocity2,
+    Image,
+    Size,
+    Point2,
+    Force2,
+    Shape,
+    Isometry,
+    BasicMaterial,
+    RigidBodyDesc,
+    RigidBody,
+};
 
 macro_rules! components {
     ($($component:ident),* $(,)?) => {
@@ -14,6 +31,8 @@ macro_rules! components {
 components! {
     Player,
     Position,
+    PhysicsBody,
+    PhysicsCollider,
     Sprite,
     CharacterSprites,
     PlatformerControls,
@@ -31,8 +50,93 @@ pub struct Player;
 
 /// The position of an entity in world coordinates
 #[derive(Component, Debug, Clone, PartialEq)]
-#[storage(VecStorage)]
+#[storage(FlaggedStorage)]
 pub struct Position(pub Vec2);
+
+/// A physics rigid body
+#[derive(Component, Debug, Clone)]
+#[storage(FlaggedStorage)]
+pub struct PhysicsBody {
+    pub handle: Option<DefaultBodyHandle>,
+    pub gravity_enabled: bool,
+    pub body_status: BodyStatus,
+    pub velocity: Velocity2,
+    pub angular_inertia: f64,
+    pub mass: f64,
+    pub local_center_of_mass: Point2,
+    pub external_forces: Force2,
+}
+
+impl Default for PhysicsBody {
+    fn default() -> Self {
+        Self {
+            handle: Default::default(),
+            gravity_enabled: Default::default(),
+            body_status: BodyStatus::Dynamic,
+            velocity: Velocity2::zero(),
+            angular_inertia: Default::default(),
+            mass: Default::default(),
+            local_center_of_mass: Point2::new(0.0, 0.0),
+            external_forces: Force2::zero(),
+        }
+    }
+}
+
+impl PhysicsBody {
+    pub(crate) fn to_rigid_body_desc(&self) -> RigidBodyDesc {
+        RigidBodyDesc::new()
+            .gravity_enabled(self.gravity_enabled)
+            .status(self.body_status)
+            .velocity(self.velocity)
+            .angular_inertia(self.angular_inertia)
+            .mass(self.mass)
+            .local_center_of_mass(self.local_center_of_mass)
+    }
+
+    /// Updates the given rigid body and applies the external forces on this
+    /// body to it
+    pub(crate) fn apply_to_rigid_body(&mut self, rigid_body: &mut RigidBody) {
+        let Self {
+            handle: _,
+            gravity_enabled,
+            body_status,
+            velocity,
+            angular_inertia,
+            mass,
+            local_center_of_mass,
+            ref mut external_forces,
+        } = *self;
+
+        // Update properites
+        rigid_body.enable_gravity(gravity_enabled);
+        rigid_body.set_status(body_status);
+        rigid_body.set_velocity(velocity);
+        rigid_body.set_angular_inertia(angular_inertia);
+        rigid_body.set_mass(mass);
+        rigid_body.set_local_center_of_mass(local_center_of_mass);
+
+        // Applies forces by draining external force property
+        let force = *external_forces;
+        *external_forces = Force2::zero();
+        rigid_body.apply_force(0, &force, ForceType::Force, true);
+    }
+}
+
+/// A physics collider
+#[derive(Component, Debug, Clone)]
+#[storage(FlaggedStorage)]
+pub struct PhysicsCollider {
+    pub(crate) handle: Option<DefaultColliderHandle>,
+    pub shape: Shape,
+    pub offset_from_parent: Isometry,
+    pub density: f64,
+    pub material: BasicMaterial,
+    pub margin: f64,
+    pub collision_groups: CollisionGroups,
+    pub linear_prediction: f64,
+    pub angular_prediction: f64,
+    pub sensor: bool,
+}
 
 /// Defines the image that an entity should be drawn with
 ///
