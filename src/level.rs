@@ -44,6 +44,7 @@ use crate::{
     EventKind,
     Modifiers,
     Systems,
+    Viewport,
 };
 
 use load_tilesets::load_tilesets;
@@ -158,20 +159,23 @@ impl fmt::Debug for Level {
 
 impl Level {
     pub fn new(game: &Game) -> Self {
+        let default_viewport = Rect::new(
+            0,
+            0,
+            game.window_width(),
+            game.window_height(),
+        );
+
         let mut world = World::new();
         crate::register_components(&mut world);
         // Setup resources
         world.insert(EventStream::default());
+        world.insert(Viewport(default_viewport));
 
         Self {
             world,
             systems: Systems::default(),
-            viewport: Rect::new(
-                0,
-                0,
-                game.window_width(),
-                game.window_height(),
-            ),
+            viewport: default_viewport,
             level_start: None,
             tile_size: Size {width: 1, height: 1},
             extra_layers: ExtraLayers::default(),
@@ -271,6 +275,7 @@ impl Level {
     {
         // Update events
         self.world.write_resource::<EventStream>().refill(events);
+
         // Allow debug controls to handle events first (and potentially override
         // game behaviour)
         self.handle_debug_controls();
@@ -278,14 +283,29 @@ impl Level {
         // Update physics parameters
         self.systems.physics.set_gravity(physics.gravity());
 
+        // Store the value of the viewport resource before the system is run
+        let prev_viewport = (*self.world.read_resource::<Viewport>()).clone();
+
         // Run dispatcher
         self.systems.run(&mut self.world);
+
+        // Only update the actual viewport if the systems changed the viewport
+        // resource
+        //
+        // This allows the debug controls to work but ensures the viewport
+        // target moving in the world still causes an update
+        let next_viewport = (*self.world.read_resource::<Viewport>()).clone();
+        if prev_viewport != next_viewport {
+            let Viewport(viewport) = next_viewport;
+            self.viewport = viewport;
+        }
     }
 
     fn handle_debug_controls(&mut self) {
+        let viewport = &mut self.viewport;
+
         let events = self.world.read_resource::<EventStream>();
         for event in events.iter() {
-            let viewport = &mut self.viewport;
             use crate::Key;
             match event.kind() {
                 EventKind::KeyDown {

@@ -1,5 +1,6 @@
 mod physics;
 mod keyboard;
+mod viewport_updater;
 
 use specs::{World, System};
 
@@ -7,6 +8,7 @@ use specs::{World, System};
 pub struct Systems {
     pub keyboard: keyboard::Keyboard,
     pub physics: physics::Physics,
+    pub viewport_updater: viewport_updater::ViewportUpdater,
 }
 
 impl Systems {
@@ -14,9 +16,11 @@ impl Systems {
         let Self {
             keyboard,
             physics,
+            viewport_updater,
         } = self;
 
         keyboard.run(world.system_data());
         physics.run(world.system_data());
+        viewport_updater.run(world.system_data());
     }
 }

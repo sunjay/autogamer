@@ -1,4 +1,4 @@
-use specs::{World, WorldExt, Component, VecStorage, HashMapStorage, DenseVecStorage};
+use specs::{World, WorldExt, Component, VecStorage, HashMapStorage, DenseVecStorage, NullStorage};
 use nphysics2d::{
     math::ForceType,
     ncollide2d::pipeline::CollisionGroups,
@@ -48,7 +48,7 @@ components! {
 /// the players of the game. This component is automatically added when you call
 /// `Game.add_player`.
 #[derive(Component, Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
-#[storage(HashMapStorage)]
+#[storage(NullStorage)]
 pub struct Player;
 
 /// The position of an entity in world coordinates
@@ -296,7 +296,7 @@ pub struct Health(pub u32);
 ///
 /// Warning: Multiple entities should not have this component at the same time.
 #[derive(Component, Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
-#[storage(HashMapStorage)]
+#[storage(NullStorage)]
 pub struct ViewportTarget;
 
 /// If an entity with this component collides with a player, that player will

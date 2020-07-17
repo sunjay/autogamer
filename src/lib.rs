@@ -13,6 +13,7 @@ mod level;
 mod components;
 mod component_templates;
 mod spritesheets;
+mod resources;
 mod systems;
 
 pub use math::*;
@@ -28,4 +29,5 @@ pub use level::*;
 pub use components::*;
 pub use component_templates::*;
 pub use spritesheets::*;
+pub use resources::*;
 pub use systems::*;
