@@ -1,8 +1,9 @@
-use specs::{World, WorldExt, Component, VecStorage, HashMapStorage, FlaggedStorage};
+use specs::{World, WorldExt, Component, VecStorage, HashMapStorage, DenseVecStorage};
 use nphysics2d::{
+    math::ForceType,
     ncollide2d::pipeline::CollisionGroups,
     object::{BodyStatus, DefaultBodyHandle, DefaultColliderHandle, Body},
-    math::ForceType,
+    material::MaterialHandle,
 };
 use sdl2::rect::Point;
 
@@ -14,10 +15,11 @@ use crate::{
     Point2,
     Force2,
     Shape,
-    Isometry,
     BasicMaterial,
     RigidBodyDesc,
     RigidBody,
+    ColliderDesc,
+    Collider,
 };
 
 macro_rules! components {
@@ -50,12 +52,12 @@ pub struct Player;
 
 /// The position of an entity in world coordinates
 #[derive(Component, Debug, Clone, PartialEq)]
-#[storage(FlaggedStorage)]
+#[storage(VecStorage)]
 pub struct Position(pub Vec2);
 
 /// A physics rigid body
 #[derive(Component, Debug, Clone)]
-#[storage(FlaggedStorage)]
+#[storage(DenseVecStorage)]
 pub struct PhysicsBody {
     pub handle: Option<DefaultBodyHandle>,
     pub gravity_enabled: bool,
@@ -84,13 +86,24 @@ impl Default for PhysicsBody {
 
 impl PhysicsBody {
     pub(crate) fn to_rigid_body_desc(&self) -> RigidBodyDesc {
+        let Self {
+            handle: _,
+            gravity_enabled,
+            body_status,
+            velocity,
+            angular_inertia,
+            mass,
+            local_center_of_mass,
+            external_forces: _,
+        } = *self;
+
         RigidBodyDesc::new()
-            .gravity_enabled(self.gravity_enabled)
-            .status(self.body_status)
-            .velocity(self.velocity)
-            .angular_inertia(self.angular_inertia)
-            .mass(self.mass)
-            .local_center_of_mass(self.local_center_of_mass)
+            .gravity_enabled(gravity_enabled)
+            .status(body_status)
+            .velocity(velocity)
+            .angular_inertia(angular_inertia)
+            .mass(mass)
+            .local_center_of_mass(local_center_of_mass)
     }
 
     /// Updates the given rigid body and applies the external forces on this
@@ -124,18 +137,86 @@ impl PhysicsBody {
 
 /// A physics collider
 #[derive(Component, Debug, Clone)]
-#[storage(FlaggedStorage)]
+#[storage(DenseVecStorage)]
 pub struct PhysicsCollider {
     pub(crate) handle: Option<DefaultColliderHandle>,
     pub shape: Shape,
-    pub offset_from_parent: Isometry,
+    /// Updating this after the component is initially added is not supported
     pub density: f64,
+    /// Updating this after the component is initially added is not supported
     pub material: BasicMaterial,
     pub margin: f64,
     pub collision_groups: CollisionGroups,
-    pub linear_prediction: f64,
-    pub angular_prediction: f64,
+    /// Updating this after the component is initially added is not supported
     pub sensor: bool,
+    prev_shape: Option<Shape>,
+}
+
+impl Default for PhysicsCollider {
+    fn default() -> Self {
+        Self {
+            handle: Default::default(),
+            shape: Shape::Rect {width: 0.0, height: 0.0},
+            density: Default::default(),
+            material: Default::default(),
+            margin: Default::default(),
+            collision_groups: Default::default(),
+            sensor: Default::default(),
+            prev_shape: None,
+        }
+    }
+}
+
+impl PhysicsCollider {
+    pub(crate) fn to_collider_desc(&self) -> ColliderDesc {
+        let Self {
+            handle: _,
+            ref shape,
+            density,
+            material,
+            margin,
+            collision_groups,
+            sensor,
+            prev_shape: _,
+        } = *self;
+
+        ColliderDesc::new(shape.handle(margin))
+            .density(density)
+            .material(MaterialHandle::new(material))
+            .margin(margin)
+            .collision_groups(collision_groups)
+            .sensor(sensor)
+    }
+
+    pub(crate) fn update_collider(&self, collider: &mut Collider) {
+        let Self {
+            handle: _,
+            ref shape,
+            density,
+            // updating the material is not supported and checking if it changed
+            // isn't easy because BasicMaterial doesn't implement PartialEq
+            material: _,
+            margin,
+            collision_groups,
+            sensor,
+            ref prev_shape,
+        } = *self;
+
+        if prev_shape.as_ref() != Some(shape) {
+            collider.set_shape(shape.handle(margin));
+        }
+
+        // No way to update the density currently
+        assert!((density - collider.density()).abs() < 0.0001,
+            "changing collider density is not supported");
+
+        collider.set_margin(margin);
+        collider.set_collision_groups(collision_groups);
+
+        // No way to update is_sensor
+        assert_eq!(collider.is_sensor(), sensor,
+            "changing the sensor property of a collider is not supported");
+    }
 }
 
 /// Defines the image that an entity should be drawn with

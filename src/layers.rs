@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use noisy_float::types::R64;
 use sdl2::rect::Rect;
 
-use crate::{Size, Vec2, TileId, ImageId};
+use crate::{Size, Vec2, TileId, ImageId, Shape};
 
 /// Defines how an image is to be aligned
 ///
@@ -45,14 +45,6 @@ pub struct TileImage {
     pub size: Size,
     /// The alignment of this image within its containing tile
     pub align: Align,
-}
-
-#[derive(Debug, Clone)]
-pub enum Shape {
-    Rect {width: f64, height: f64},
-    Ellipse {width: f64, height: f64},
-    Polyline {points: Vec<Vec2>},
-    Polygon {points: Vec<Vec2>},
 }
 
 #[derive(Debug, Clone)]

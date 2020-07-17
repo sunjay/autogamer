@@ -1,3 +1,5 @@
+use nphysics2d::{object::DefaultBodyHandle, ncollide2d::shape::ShapeHandle};
+
 // Math types
 pub type Vec2 = nphysics2d::math::Vector<f64>;
 pub type Point2 = nphysics2d::math::Point<f64>;
@@ -16,3 +18,19 @@ pub struct Size {
 pub type BasicMaterial = nphysics2d::material::BasicMaterial<f64>;
 pub type RigidBodyDesc = nphysics2d::object::RigidBodyDesc<f64>;
 pub type RigidBody = nphysics2d::object::RigidBody<f64>;
+pub type ColliderDesc = nphysics2d::object::ColliderDesc<f64>;
+pub type Collider = nphysics2d::object::Collider<f64, DefaultBodyHandle>;
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Shape {
+    Rect {width: f64, height: f64},
+    Ellipse {width: f64, height: f64},
+    Polyline {points: Vec<Vec2>},
+    Polygon {points: Vec<Vec2>},
+}
+
+impl Shape {
+    pub(crate) fn handle(&self, margin: f64) -> ShapeHandle<f64> {
+        todo!()
+    }
+}
