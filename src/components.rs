@@ -236,25 +236,6 @@ impl PhysicsCollider {
         assert_eq!(collider.is_sensor(), sensor,
             "changing the sensor property of a collider is not supported");
     }
-
-    pub(crate) fn update_from_collider(&mut self, collider: &Collider) {
-        let Self {
-            handle: _,
-            // Updating the shape isn't supported since we'd need to downcast
-            shape: _,
-            density,
-            // Updating the material isn't supported since we'd need to downcast
-            material: _,
-            margin,
-            collision_groups,
-            sensor,
-        } = self;
-
-        *density = collider.density();
-        *margin = collider.margin();
-        *collision_groups = *collider.collision_groups();
-        *sensor = collider.is_sensor();
-    }
 }
 
 /// Defines the image that an entity should be drawn with

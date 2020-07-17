@@ -133,7 +133,6 @@ impl<'a> System<'a> for Physics {
 
         // Sync the results back from the physics world
         sync_engine_to_physics_bodies(&mut positions, &mut physics_bodies, bodies);
-        sync_engine_to_physics_colliders(&mut positions, &mut physics_colliders, colliders);
     }
 }
 
@@ -280,23 +279,5 @@ fn sync_engine_to_physics_bodies(
 
         body.update_from_rigid_body(rigid_body);
         *pos = rigid_body.position().translation.vector;
-    }
-}
-
-fn sync_engine_to_physics_colliders(
-    positions: &mut WriteStorage<Position>,
-    physics_colliders: &mut WriteStorage<PhysicsCollider>,
-    colliders: &mut DefaultColliderSet<f64>,
-) {
-    for (pos, physics_collider) in (positions, physics_colliders).join() {
-        let Position(pos) = pos;
-
-        let handle = physics_collider.handle
-            .expect("bug: all colliders should have handles at this point");
-        let collider = colliders.get(handle)
-            .expect("bug: invalid collider handle");
-
-        physics_collider.update_from_collider(collider);
-        *pos = collider.position().translation.vector;
     }
 }
