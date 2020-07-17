@@ -20,6 +20,7 @@ use crate::{
     RigidBody,
     ColliderDesc,
     Collider,
+    ShapeRect,
 };
 
 macro_rules! components {
@@ -140,6 +141,7 @@ impl PhysicsBody {
 #[storage(DenseVecStorage)]
 pub struct PhysicsCollider {
     pub(crate) handle: Option<DefaultColliderHandle>,
+    /// Updating this after the component is initially added is not supported
     pub shape: Shape,
     /// Updating this after the component is initially added is not supported
     pub density: f64,
@@ -149,20 +151,18 @@ pub struct PhysicsCollider {
     pub collision_groups: CollisionGroups,
     /// Updating this after the component is initially added is not supported
     pub sensor: bool,
-    prev_shape: Option<Shape>,
 }
 
 impl Default for PhysicsCollider {
     fn default() -> Self {
         Self {
             handle: Default::default(),
-            shape: Shape::Rect {width: 0.0, height: 0.0},
+            shape: Shape::Rect(ShapeRect::new(Vec2::new(0.0, 0.0))),
             density: Default::default(),
             material: Default::default(),
             margin: Default::default(),
             collision_groups: Default::default(),
             sensor: Default::default(),
-            prev_shape: None,
         }
     }
 }
@@ -177,10 +177,9 @@ impl PhysicsCollider {
             margin,
             collision_groups,
             sensor,
-            prev_shape: _,
         } = *self;
 
-        ColliderDesc::new(shape.handle(margin))
+        ColliderDesc::new(shape.to_handle())
             .density(density)
             .material(MaterialHandle::new(material))
             .margin(margin)
@@ -191,7 +190,9 @@ impl PhysicsCollider {
     pub(crate) fn update_collider(&self, collider: &mut Collider) {
         let Self {
             handle: _,
-            ref shape,
+            // Updating shape is not currently supported because the various
+            // shape primitives do not implement PartialEq
+            shape: _,
             density,
             // updating the material is not supported and checking if it changed
             // isn't easy because BasicMaterial doesn't implement PartialEq
@@ -199,14 +200,9 @@ impl PhysicsCollider {
             margin,
             collision_groups,
             sensor,
-            ref prev_shape,
         } = *self;
 
-        if prev_shape.as_ref() != Some(shape) {
-            collider.set_shape(shape.handle(margin));
-        }
-
-        // No way to update the density currently
+        // No way to update the density currently in nphysics API
         assert!((density - collider.density()).abs() < 0.0001,
             "changing collider density is not supported");
 

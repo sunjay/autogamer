@@ -3,55 +3,24 @@ use std::collections::HashMap;
 
 use tiled::Tileset;
 
-use crate::{Size, Vec2, Tile, TileImage, CollisionGeometry, Shape, Align, ImageCache};
+use crate::{
+    assert_support,
+    Size,
+    Point2,
+    Vec2,
+    Tile,
+    TileImage,
+    CollisionGeometry,
+    Shape,
+    Align,
+    ImageCache,
+    ShapeRect,
+    ShapeCircle,
+    ShapePolyline,
+    ShapeConvexPolygon,
+};
 
-use super::{TileId, LoadError, resolve_image_path};
-
-fn object_to_collision_geometry(obj: &tiled::Object) -> CollisionGeometry {
-    let tiled::Object {
-        id: _,
-        gid: _,
-        name: _,
-        obj_type: _,
-        width: _,
-        height: _,
-        x,
-        y,
-        rotation: _,
-        visible: _,
-        ref shape,
-        properties: _,
-    } = *obj;
-
-    let position = Vec2::new(x as f64, y as f64);
-    let shape = match shape {
-        &tiled::ObjectShape::Rect {width, height} => {
-            Shape::Rect {width: width as f64, height: height as f64}
-        },
-
-        &tiled::ObjectShape::Ellipse {width, height} => {
-            Shape::Ellipse {width: width as f64, height: height as f64}
-        },
-
-        tiled::ObjectShape::Polyline {points} => {
-            Shape::Polyline {
-                points: points.iter().map(|&(x, y)| {
-                    Vec2::new(x as f64, y as f64)
-                }).collect(),
-            }
-        },
-
-        tiled::ObjectShape::Polygon {points} => {
-            Shape::Polygon {
-                points: points.iter().map(|&(x, y)| {
-                    Vec2::new(x as f64, y as f64)
-                }).collect(),
-            }
-        },
-    };
-
-    CollisionGeometry {position, shape}
-}
+use super::{TileId, LoadError, Unsupported, resolve_image_path};
 
 pub fn load_tilesets(
     base_dir: &Path,
@@ -126,19 +95,24 @@ pub fn load_tilesets(
                 align: Align::default(),
             };
 
-            let collision_geometry = objectgroup.as_ref().map(|objectgroup| {
-                let tiled::ObjectGroup {
-                    name: _,
-                    opacity: _,
-                    visible: _,
-                    objects,
-                    colour: _,
-                    layer_index: _,
-                    properties: _,
-                } = objectgroup;
+            let collision_geometry = match &objectgroup {
+                Some(objectgroup) => {
+                    let tiled::ObjectGroup {
+                        name: _,
+                        opacity: _,
+                        visible: _,
+                        objects,
+                        colour: _,
+                        layer_index: _,
+                        properties: _,
+                    } = objectgroup;
 
-                objects.iter().map(object_to_collision_geometry).collect()
-            }).unwrap_or_default();
+                    objects.iter()
+                        .map(object_to_collision_geometry)
+                        .collect::<Result<Vec<_>, _>>()?
+                },
+                None => Vec::new(),
+            };
 
             let tile = Tile {
                 id,
@@ -154,4 +128,54 @@ pub fn load_tilesets(
     }
 
     Ok(tiles)
+}
+
+fn object_to_collision_geometry(obj: &tiled::Object) -> Result<CollisionGeometry, Unsupported> {
+    let tiled::Object {
+        id,
+        gid: _,
+        name: _,
+        obj_type: _,
+        width: _,
+        height: _,
+        x,
+        y,
+        rotation: _,
+        visible: _,
+        ref shape,
+        properties: _,
+    } = *obj;
+
+    let position = Vec2::new(x as f64, y as f64);
+    let shape = match shape {
+        &tiled::ObjectShape::Rect {width, height} => {
+            let half_extents = Vec2::new(width as f64/2.0, height as f64/2.0);
+            Shape::Rect(ShapeRect::new(half_extents))
+        },
+
+        &tiled::ObjectShape::Ellipse {width, height} => {
+            assert_support!((width - height).abs() < 0.001,
+                "invalid collision geometry: only circles that have an equal width and height are supported (object ID = {})", id);
+            let radius = width as f64 / 2.0;
+            Shape::Circle(ShapeCircle::new(radius))
+        },
+
+        tiled::ObjectShape::Polyline {points} => {
+            let points = points.iter()
+                .map(|&(x, y)| Point2::new(x as f64, y as f64))
+                .collect();
+            Shape::Polyline(ShapePolyline::new(points, None))
+        },
+
+        tiled::ObjectShape::Polygon {points} => {
+            let points: Vec<_> = points.iter()
+                .map(|&(x, y)| Point2::new(x as f64, y as f64))
+                .collect();
+            let polygon = ShapeConvexPolygon::try_from_points(&points)
+                .ok_or_else(|| Unsupported(format!("invalid collision geometry: only convex polygons are supported (object ID = {})", id)))?;
+            Shape::ConvexPolygon(polygon)
+        },
+    };
+
+    Ok(CollisionGeometry {position, shape})
 }

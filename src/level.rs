@@ -90,6 +90,7 @@ impl fmt::Display for TileId {
     }
 }
 
+#[macro_export]
 macro_rules! assert_support {
     ($cond:expr, $($arg:tt)+) => {
         if !$cond {
