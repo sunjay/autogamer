@@ -152,9 +152,9 @@ fn sync_physics_bodies_to_engine(
     // Add or update the physics bodies
     for (entity, &Position(pos), body) in (entities, positions, physics_bodies).join() {
         let id = entity.id();
-        match body_handles.get(&id) {
+        match body.handle {
             // Update existing rigid body
-            Some(&handle) => {
+            Some(handle) => {
                 let rigid_body = bodies.rigid_body_mut(handle)
                     .expect("bug: invalid physics body handle");
 
@@ -164,6 +164,14 @@ fn sync_physics_bodies_to_engine(
 
             // Add a new rigid body
             None => {
+                // Check if we previously stored a handle for this ID. If that
+                // is the case, this means that the PhysicsBody component was
+                // removed and re-added.
+                if let Some(handle) = body_handles.remove(&id) {
+                    // Remove the handle for the previous PhysicsBody component
+                    bodies.remove(handle);
+                }
+
                 let rigid_body = body.to_rigid_body_desc()
                     .position(Isometry::new(pos, 0.0))
                     // Store ID so updating from the physics world is easy
@@ -172,11 +180,9 @@ fn sync_physics_bodies_to_engine(
 
                 let handle = bodies.insert(rigid_body);
 
-                debug_assert!(body.handle.is_none());
                 body.handle = Some(handle);
-                debug_assert!(!body_handles.contains_key(&id));
                 body_handles.insert(id, handle);
-            }
+            },
         }
     }
 }
@@ -207,9 +213,9 @@ fn sync_physics_colliders_to_engine(
     // Add or update the physics colliders
     for (entity, &Position(pos), physics_collider) in (entities, positions, physics_colliders).join() {
         let id = entity.id();
-        match collider_handles.get(&id) {
+        match physics_collider.handle {
             // Update existing collider
-            Some(&handle) => {
+            Some(handle) => {
                 let collider = colliders.get_mut(handle)
                     .expect("bug: invalid physics collider handle");
 
@@ -219,6 +225,19 @@ fn sync_physics_colliders_to_engine(
 
             // Add a new collider
             None => {
+                // Check if we previously stored a handle for this ID. If that
+                // is the case, this means that the PhysicsCollider component
+                // was removed and re-added.
+                if let Some(handle) = collider_handles.remove(&id) {
+                    // Remove the handle for the previous PhysicsCollider component
+                    //
+                    // Check if collider still exists since colliders are
+                    // implicitly removed when the parent body is removed.
+                    if colliders.get(handle).is_some() {
+                        colliders.remove(handle);
+                    }
+                }
+
                 // Attempt to find an existing body associated with the same ID
                 // so we can use it as the parent of the collider (default: ground)
                 let body_handle = body_handles.get(&id)
@@ -234,9 +253,7 @@ fn sync_physics_colliders_to_engine(
 
                 let handle = colliders.insert(collider);
 
-                debug_assert!(physics_collider.handle.is_none());
                 physics_collider.handle = Some(handle);
-                debug_assert!(!collider_handles.contains_key(&id));
                 collider_handles.insert(id, handle);
             },
         }

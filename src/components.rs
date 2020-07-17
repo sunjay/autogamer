@@ -60,7 +60,7 @@ pub struct Position(pub Vec2);
 #[derive(Component, Debug, Clone)]
 #[storage(DenseVecStorage)]
 pub struct PhysicsBody {
-    pub handle: Option<DefaultBodyHandle>,
+    pub(crate) handle: Option<DefaultBodyHandle>,
     pub gravity_enabled: bool,
     pub body_status: BodyStatus,
     pub velocity: Velocity2,
