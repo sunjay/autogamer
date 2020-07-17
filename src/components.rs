@@ -134,6 +134,29 @@ impl PhysicsBody {
         *external_forces = Force2::zero();
         rigid_body.apply_force(0, &force, ForceType::Force, true);
     }
+
+    pub(crate) fn update_from_rigid_body(&mut self, rigid_body: &RigidBody) {
+        let Self {
+            handle: _,
+            gravity_enabled,
+            body_status,
+            velocity,
+            angular_inertia,
+            mass,
+            // No API to get this value from the RigidBody
+            local_center_of_mass: _,
+            // Not a part of the RigidBody (specific to this component)
+            external_forces: _,
+        } = self;
+
+        *gravity_enabled = rigid_body.gravity_enabled();
+        *body_status = rigid_body.status();
+        *velocity = *rigid_body.velocity();
+        // Adapted from: https://github.com/amethyst/specs-physics/blob/8ec2243f25e5b994af3a6a0c2ae80bc5ebf65b7f/src/bodies.rs#L118-L120
+        let augmented_mass = rigid_body.augmented_mass();
+        *angular_inertia = augmented_mass.angular;
+        *mass = augmented_mass.linear;
+    }
 }
 
 /// A physics collider
@@ -194,7 +217,7 @@ impl PhysicsCollider {
             // shape primitives do not implement PartialEq
             shape: _,
             density,
-            // updating the material is not supported and checking if it changed
+            // Updating the material is not supported and checking if it changed
             // isn't easy because BasicMaterial doesn't implement PartialEq
             material: _,
             margin,
@@ -212,6 +235,25 @@ impl PhysicsCollider {
         // No way to update is_sensor
         assert_eq!(collider.is_sensor(), sensor,
             "changing the sensor property of a collider is not supported");
+    }
+
+    pub(crate) fn update_from_collider(&mut self, collider: &Collider) {
+        let Self {
+            handle: _,
+            // Updating the shape isn't supported since we'd need to downcast
+            shape: _,
+            density,
+            // Updating the material isn't supported since we'd need to downcast
+            material: _,
+            margin,
+            collision_groups,
+            sensor,
+        } = self;
+
+        *density = collider.density();
+        *margin = collider.margin();
+        *collision_groups = *collider.collision_groups();
+        *sensor = collider.is_sensor();
     }
 }
 

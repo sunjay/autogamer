@@ -94,13 +94,13 @@ impl<'a> System<'a> for Physics {
 
         let Data {
             entities,
-            positions,
+            mut positions,
             mut physics_bodies,
             mut physics_colliders,
         } = data;
 
-        // Sync to the physics world. Bodies must go first since colliders rely
-        // on the bodies being fully synced.
+        // Sync to the physics world
+
         sync_physics_bodies_to_engine(
             &entities,
             &positions,
@@ -108,6 +108,7 @@ impl<'a> System<'a> for Physics {
             body_handles,
             bodies,
         );
+        // Syncing the colliders depends on the bodies being fully synced first
         sync_physics_colliders_to_engine(
             &entities,
             &positions,
@@ -117,6 +118,8 @@ impl<'a> System<'a> for Physics {
             body_handles,
             *ground,
         );
+
+        // Run the next step of the simulation
 
         mechanical_world.step(
             geometrical_world,
@@ -128,7 +131,9 @@ impl<'a> System<'a> for Physics {
 
         //TODO: Copy collider events
 
-        //TODO: Copy from physics worlds to World
+        // Sync the results back from the physics world
+        sync_engine_to_physics_bodies(&mut positions, &mut physics_bodies, bodies);
+        sync_engine_to_physics_colliders(&mut positions, &mut physics_colliders, colliders);
     }
 }
 
@@ -257,5 +262,41 @@ fn sync_physics_colliders_to_engine(
                 collider_handles.insert(id, handle);
             },
         }
+    }
+}
+
+fn sync_engine_to_physics_bodies(
+    positions: &mut WriteStorage<Position>,
+    physics_bodies: &mut WriteStorage<PhysicsBody>,
+    bodies: &mut DefaultBodySet<f64>,
+) {
+    for (pos, body) in (positions, physics_bodies).join() {
+        let Position(pos) = pos;
+
+        let handle = body.handle
+            .expect("bug: all bodies should have handles at this point");
+        let rigid_body = bodies.rigid_body(handle)
+            .expect("bug: invalid body handle");
+
+        body.update_from_rigid_body(rigid_body);
+        *pos = rigid_body.position().translation.vector;
+    }
+}
+
+fn sync_engine_to_physics_colliders(
+    positions: &mut WriteStorage<Position>,
+    physics_colliders: &mut WriteStorage<PhysicsCollider>,
+    colliders: &mut DefaultColliderSet<f64>,
+) {
+    for (pos, physics_collider) in (positions, physics_colliders).join() {
+        let Position(pos) = pos;
+
+        let handle = physics_collider.handle
+            .expect("bug: all colliders should have handles at this point");
+        let collider = colliders.get(handle)
+            .expect("bug: invalid collider handle");
+
+        physics_collider.update_from_collider(collider);
+        *pos = collider.position().translation.vector;
     }
 }
