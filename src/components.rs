@@ -1,7 +1,6 @@
 use specs::{World, WorldExt, Component, VecStorage, HashMapStorage, FlaggedStorage, NullStorage};
 use nphysics2d::{
     math::ForceType,
-    ncollide2d::pipeline::CollisionGroups,
     object::{BodyStatus, DefaultBodyHandle, DefaultColliderHandle, Body, BodyPart},
     material::MaterialHandle,
 };
@@ -22,6 +21,8 @@ use crate::{
     Collider,
     ShapeRect,
 };
+
+pub use nphysics2d::ncollide2d::pipeline::CollisionGroups;
 
 macro_rules! components {
     ($($component:ident),* $(,)?) => {
@@ -60,7 +61,10 @@ pub struct Position(pub Vec2);
 #[derive(Component, Debug, Clone)]
 #[storage(FlaggedStorage)]
 pub struct PhysicsBody {
-    pub(crate) handle: Option<DefaultBodyHandle>,
+    /// Hidden because this field should not be modified outside this crate but
+    /// we still want struct update syntax to work
+    #[doc(hidden)]
+    pub handle: Option<DefaultBodyHandle>,
     pub gravity_enabled: bool,
     pub body_status: BodyStatus,
     pub velocity: Velocity2,
@@ -180,7 +184,10 @@ impl PhysicsBody {
 #[derive(Component, Debug, Clone)]
 #[storage(FlaggedStorage)]
 pub struct PhysicsCollider {
-    pub(crate) handle: Option<DefaultColliderHandle>,
+    /// Hidden because this field should not be modified outside this crate but
+    /// we still want struct update syntax to work
+    #[doc(hidden)]
+    pub handle: Option<DefaultColliderHandle>,
     /// Updating this after the component is initially added is not supported
     pub shape: Shape,
     /// Updating this after the component is initially added is not supported
@@ -210,8 +217,8 @@ impl Default for PhysicsCollider {
 impl PhysicsCollider {
     /// Collision group for any ground, wall, or other obstacle
     pub const GROUND_COLLISION_GROUP: usize = 0;
-    pub const ENEMY_COLLISION_GROUP: usize = 0;
-    pub const PLAYER_COLLISION_GROUP: usize = 0;
+    pub const PLAYER_COLLISION_GROUP: usize = 1;
+    pub const ENEMY_COLLISION_GROUP: usize = 2;
 
     pub fn ground_collision_groups() -> CollisionGroups {
         CollisionGroups::new()

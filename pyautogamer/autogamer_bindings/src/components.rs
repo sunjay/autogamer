@@ -3,6 +3,8 @@ use pyo3::prelude::*;
 use pyo3::exceptions::ValueError;
 use specs::{World, WorldExt};
 
+use crate::*;
+
 macro_rules! components {
     ($($component:ident),* $(,)?) => {
         /// Adds all component classes to a module
@@ -32,6 +34,8 @@ macro_rules! components {
 components! {
     Player,
     Position,
+    PhysicsBody,
+    PhysicsCollider,
     Sprite,
     CharacterSprites,
     PlatformerControls,
@@ -98,6 +102,68 @@ impl Position {
     //pub fn set_y(&mut self, y: f64) {
     //    self.component.0.y = y;
     //}
+}
+
+/// Describes a body in the physics engine
+#[pyclass]
+#[derive(Debug, Clone)]
+pub struct PhysicsBody {
+    component: ag::PhysicsBody,
+}
+
+#[pymethods]
+impl PhysicsBody {
+    #[new]
+    //TODO(PyO3/pyo3#1025): `mass` should be a keyword-only argument with no default
+    #[args("*", mass="0.0")]
+    pub fn new(mass: f64) -> Self {
+        Self {
+            component: ag::PhysicsBody {
+                mass,
+                ..ag::PhysicsBody::default()
+            },
+        }
+    }
+
+    #[getter]
+    pub fn mass(&self) -> f64 {
+        self.component.mass
+    }
+
+    //TODO: Should the setter have the side effect of updating this component
+    // for a given entity? Maybe this struct should store Option<Entity>
+    //#[setter]
+    //pub fn set_mass(&mut self, mass: f64) {
+    //    self.component.mass = mass;
+    //}
+}
+
+/// Describes a collider in the physics engine
+#[pyclass]
+#[derive(Debug, Clone)]
+pub struct PhysicsCollider {
+    component: ag::PhysicsCollider,
+}
+
+#[pymethods]
+impl PhysicsCollider {
+    #[new]
+    //TODO(PyO3/pyo3#1025): `shape` should be a keyword-only argument with no default
+    #[args("*", shape="todo!()", collision_groups="None")]
+    pub fn new(shape: &PyAny, collision_groups: Option<CollisionGroups>) -> PyResult<Self> {
+        let shape = Shape::to_shape(shape)
+            .ok_or_else(|| ValueError::py_err("Unknown shape"))?;
+        let collision_groups = collision_groups.map(|groups| groups.inner().clone())
+            .unwrap_or_default();
+
+        Ok(Self {
+            component: ag::PhysicsCollider {
+                shape,
+                collision_groups,
+                ..ag::PhysicsCollider::default()
+            },
+        })
+    }
 }
 
 #[pyclass]
