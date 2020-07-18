@@ -15,6 +15,8 @@ use crate::{
     Sprite,
     ApplyComponentTemplates,
     Position,
+    Shape,
+    PhysicsCollider,
 };
 
 use super::{TILE_DRAW_ORDER, TileId, LoadError, image_params::TiledImageParams};
@@ -119,17 +121,26 @@ fn load_map_layer(
 
             let Tile {
                 id,
-                image: _,
-                //TODO: Insert collision geometry or a default rectangle geometry
-                // based on the image size if this is empty
+                image,
                 collision_geometry,
                 tile_type,
                 props,
             } = tile;
 
+            // Insert collision geometry as a collider, defaulting to a
+            // rectangle based on the image size if no geometry was provided
+            let shape = Shape::from_shapes(collision_geometry)
+                .unwrap_or_else(|| Shape::rect(image.size));
+
+            let collider = PhysicsCollider {
+                shape,
+                ..PhysicsCollider::default()
+            };
+
             world.create_entity()
                 .with(Position(world_pos))
                 .with(sprite)
+                .with(collider)
                 .apply_templates(*id, tile_type, props)?
                 .build();
         }

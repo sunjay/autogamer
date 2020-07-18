@@ -47,20 +47,13 @@ pub struct TileImage {
     pub align: Align,
 }
 
-#[derive(Debug, Clone)]
-pub struct CollisionGeometry {
-    pub position: Vec2,
-    /// Coordinates in the shape are relative to the position of this geometry
-    pub shape: Shape,
-}
-
 #[derive(Debug)]
 pub struct Tile {
     pub id: TileId,
     /// The image drawn at this tile's position
     pub image: TileImage,
     /// Any coordinates in the geometry are relative to the position of the tile
-    pub collision_geometry: Vec<CollisionGeometry>,
+    pub collision_geometry: Vec<(Vec2, Shape)>,
     /// The type field provided in the tile map (possibly an empty string)
     pub tile_type: String,
     /// Any custom properites on the tile itself

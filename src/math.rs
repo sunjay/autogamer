@@ -31,6 +31,7 @@ pub type ShapeRect = nphysics2d::ncollide2d::shape::Cuboid<f64>;
 pub type ShapeCircle = nphysics2d::ncollide2d::shape::Ball<f64>;
 pub type ShapePolyline = nphysics2d::ncollide2d::shape::Polyline<f64>;
 pub type ShapeConvexPolygon = nphysics2d::ncollide2d::shape::ConvexPolygon<f64>;
+pub type ShapeCompound = nphysics2d::ncollide2d::shape::Compound<f64>;
 
 #[derive(Clone)]
 pub enum Shape {
@@ -38,6 +39,7 @@ pub enum Shape {
     Circle(ShapeCircle),
     Polyline(ShapePolyline),
     ConvexPolygon(ShapeConvexPolygon),
+    Compound(ShapeCompound),
 }
 
 impl Shape {
@@ -48,6 +50,27 @@ impl Shape {
             Circle(shape) => ShapeHandle::new(shape.clone()),
             Polyline(shape) => ShapeHandle::new(shape.clone()),
             ConvexPolygon(shape) => ShapeHandle::new(shape.clone()),
+            Compound(shape) => ShapeHandle::new(shape.clone()),
+        }
+    }
+
+    pub(crate) fn rect(size: Size) -> Self {
+        let half_extents = Vec2::new(size.width as f64 / 2.0, size.height as f64 / 2.0);
+        Shape::Rect(ShapeRect::new(half_extents))
+    }
+
+    pub(crate) fn from_shapes(shapes: &[(Vec2, Self)]) -> Option<Self> {
+        match shapes {
+            [] => None,
+            [(_, shape)] => Some(shape.clone()),
+            shapes => {
+                let shapes = shapes.iter()
+                    .map(|(pos, shape)| {
+                        (Isometry::new(*pos, 0.0), shape.to_handle())
+                    })
+                    .collect();
+                Some(Shape::Compound(ShapeCompound::new(shapes)))
+            },
         }
     }
 }
@@ -66,6 +89,9 @@ impl fmt::Debug for Shape {
                 .finish(),
             Shape::ConvexPolygon(_) => f.debug_tuple("ConvexPolygon")
                 .field(&"ConvexPolygon { .. }")
+                .finish(),
+            Shape::Compound(_) => f.debug_tuple("Compound")
+                .field(&"Compound { .. }")
                 .finish(),
         }
     }

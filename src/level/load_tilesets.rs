@@ -10,7 +10,6 @@ use crate::{
     Vec2,
     Tile,
     TileImage,
-    CollisionGeometry,
     Shape,
     Align,
     ImageCache,
@@ -130,7 +129,7 @@ pub fn load_tilesets(
     Ok(tiles)
 }
 
-fn object_to_collision_geometry(obj: &tiled::Object) -> Result<CollisionGeometry, Unsupported> {
+fn object_to_collision_geometry(obj: &tiled::Object) -> Result<(Vec2, Shape), Unsupported> {
     let tiled::Object {
         id,
         gid: _,
@@ -177,5 +176,5 @@ fn object_to_collision_geometry(obj: &tiled::Object) -> Result<CollisionGeometry
         },
     };
 
-    Ok(CollisionGeometry {position, shape})
+    Ok((position, shape))
 }
