@@ -352,9 +352,6 @@ fn sync_physics_colliders_to_engine(
                     .expect("bug: invalid physics collider handle");
 
                 physics_collider.update_collider(collider);
-                if collider.position().translation.vector != pos {
-                    collider.set_position(Isometry::new(pos, 0.0));
-                }
             },
 
             // Add a new collider
@@ -374,13 +371,24 @@ fn sync_physics_colliders_to_engine(
 
                 // Attempt to find an existing body associated with the same ID
                 // so we can use it as the parent of the collider (default: ground)
-                let body_handle = body_handles.get(&id)
-                    .map(|&handle| BodyPartHandle(handle, 0))
-                    .unwrap_or_else(|| BodyPartHandle(ground, 0));
+                let (body_handle, rel_pos) = match body_handles.get(&id) {
+                    Some(&handle) => {
+                        let body_handle = BodyPartHandle(handle, 0);
+                        // Position relative to parent body
+                        let rel_pos = Vec2::new(0.0, 0.0);
+                        (body_handle, rel_pos)
+                    },
 
+                    None => {
+                        let body_handle = BodyPartHandle(ground, 0);
+                        // Position relative to ground (i.e. the origin)
+                        let rel_pos = pos;
+                        (body_handle, rel_pos)
+                    },
+                };
 
                 let collider = physics_collider.to_collider_desc()
-                    .position(Isometry::new(pos, 0.0))
+                    .position(Isometry::new(rel_pos, 0.0))
                     // Store ID so updating from the physics world is easy
                     .user_data(id)
                     .build(body_handle);
