@@ -208,6 +208,29 @@ impl Default for PhysicsCollider {
 }
 
 impl PhysicsCollider {
+    /// Collision group for any ground, wall, or other obstacle
+    pub const GROUND_COLLISION_GROUP: usize = 0;
+    pub const ENEMY_COLLISION_GROUP: usize = 0;
+    pub const PLAYER_COLLISION_GROUP: usize = 0;
+
+    pub fn ground_collision_groups() -> CollisionGroups {
+        CollisionGroups::new()
+            .with_membership(&[Self::GROUND_COLLISION_GROUP])
+            .with_blacklist(&[Self::GROUND_COLLISION_GROUP])
+    }
+
+    pub fn player_collision_groups() -> CollisionGroups {
+        CollisionGroups::new()
+            .with_membership(&[Self::PLAYER_COLLISION_GROUP])
+            .with_blacklist(&[Self::PLAYER_COLLISION_GROUP])
+    }
+
+    pub fn enemy_collision_groups() -> CollisionGroups {
+        CollisionGroups::new()
+            .with_membership(&[Self::ENEMY_COLLISION_GROUP])
+            .with_blacklist(&[Self::ENEMY_COLLISION_GROUP])
+    }
+
     pub(crate) fn to_collider_desc(&self) -> ColliderDesc {
         let Self {
             handle: _,

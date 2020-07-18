@@ -134,6 +134,7 @@ fn load_map_layer(
 
             let collider = PhysicsCollider {
                 shape,
+                collision_groups: PhysicsCollider::ground_collision_groups(),
                 ..PhysicsCollider::default()
             };
 
