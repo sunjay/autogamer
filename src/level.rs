@@ -172,9 +172,12 @@ impl Level {
         world.insert(EventStream::default());
         world.insert(Viewport(default_viewport));
 
+        let mut systems = Systems::default();
+        systems.setup(&mut world);
+
         Self {
             world,
-            systems: Systems::default(),
+            systems,
             viewport: default_viewport,
             level_start: None,
             tile_size: Size {width: 1, height: 1},

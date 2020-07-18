@@ -4,11 +4,13 @@ use specs::{
     System,
     SystemData,
     World,
-    Entities,
+    WorldExt,
     WriteStorage,
     Join,
-    prelude::ResourceId,
-    world::{EntitiesRes, Index},
+    ReaderId,
+    BitSet,
+    prelude::{ComponentEvent, ResourceId},
+    world::Index,
 };
 use nphysics2d::{
     object::{
@@ -29,7 +31,6 @@ use crate::{Position, PhysicsBody, PhysicsCollider, Isometry};
 
 #[derive(SystemData)]
 pub struct Data<'a> {
-    pub entities: Entities<'a>,
     pub positions: WriteStorage<'a, Position>,
     pub physics_bodies: WriteStorage<'a, PhysicsBody>,
     pub physics_colliders: WriteStorage<'a, PhysicsCollider>,
@@ -46,12 +47,22 @@ pub struct Physics {
 
     body_handles: HashMap<Index, DefaultBodyHandle>,
     collider_handles: HashMap<Index, DefaultColliderHandle>,
+
+    positions_reader_id: Option<ReaderId<ComponentEvent>>,
+    physics_bodies_reader_id: Option<ReaderId<ComponentEvent>>,
+    physics_colliders_reader_id: Option<ReaderId<ComponentEvent>>,
+
+    removed_physics_bodies: BitSet,
+    modified_physics_bodies: BitSet,
+    removed_physics_colliders: BitSet,
+    modified_physics_colliders: BitSet,
 }
 
 impl Default for Physics {
     fn default() -> Self {
         let mut bodies = DefaultBodySet::new();
         let ground = bodies.insert(Ground::new());
+
         Self {
             mechanical_world: DefaultMechanicalWorld::new(Vec2::new(0.0, 0.0)),
             geometrical_world: DefaultGeometricalWorld::new(),
@@ -63,6 +74,15 @@ impl Default for Physics {
 
             body_handles: HashMap::new(),
             collider_handles: HashMap::new(),
+
+            positions_reader_id: None,
+            physics_bodies_reader_id: None,
+            physics_colliders_reader_id: None,
+
+            removed_physics_bodies: BitSet::default(),
+            modified_physics_bodies: BitSet::default(),
+            removed_physics_colliders: BitSet::default(),
+            modified_physics_colliders: BitSet::default(),
         }
     }
 }
@@ -87,22 +107,50 @@ impl<'a> System<'a> for Physics {
             colliders,
             joint_constraints,
             force_generators,
+            ground,
+
             body_handles,
             collider_handles,
-            ground,
+
+            positions_reader_id,
+            physics_bodies_reader_id,
+            physics_colliders_reader_id,
+
+            removed_physics_bodies,
+            modified_physics_bodies,
+            removed_physics_colliders,
+            modified_physics_colliders,
         } = self;
 
         let Data {
-            entities,
             mut positions,
             mut physics_bodies,
             mut physics_colliders,
         } = data;
 
+        let positions_reader_id = positions_reader_id.as_mut()
+            .expect("reader_id should have been configured during setup");
+        let physics_bodies_reader_id = physics_bodies_reader_id.as_mut()
+            .expect("reader_id should have been configured during setup");
+        let physics_colliders_reader_id = physics_colliders_reader_id.as_mut()
+            .expect("reader_id should have been configured during setup");
+
+        // Determine which entities have been removed or changed
+        resolve_removals_modifications(
+            positions.channel().read(positions_reader_id),
+            physics_bodies.channel().read(physics_bodies_reader_id),
+            physics_colliders.channel().read(physics_colliders_reader_id),
+            removed_physics_bodies,
+            modified_physics_bodies,
+            removed_physics_colliders,
+            modified_physics_colliders,
+        );
+
         // Sync to the physics world
 
         sync_physics_bodies_to_engine(
-            &entities,
+            removed_physics_bodies,
+            modified_physics_bodies,
             &positions,
             &mut physics_bodies,
             body_handles,
@@ -110,7 +158,8 @@ impl<'a> System<'a> for Physics {
         );
         // Syncing the colliders depends on the bodies being fully synced first
         sync_physics_colliders_to_engine(
-            &entities,
+            removed_physics_colliders,
+            modified_physics_colliders,
             &positions,
             &mut physics_colliders,
             collider_handles,
@@ -133,29 +182,109 @@ impl<'a> System<'a> for Physics {
 
         // Sync the results back from the physics world
         sync_engine_to_physics_bodies(&mut positions, &mut physics_bodies, bodies);
+
+        // Drain events caused by this system since we don't want to end up in
+        // an infinite loop where we update things that we just updated
+        positions.channel().read(positions_reader_id).for_each(drop);
+        physics_bodies.channel().read(physics_bodies_reader_id).for_each(drop);
+        physics_colliders.channel().read(physics_colliders_reader_id).for_each(drop);
+    }
+
+    fn setup(&mut self, world: &mut World) {
+        Self::SystemData::setup(world);
+
+        // register reader id for the Position storage
+        let mut positions = world.write_storage::<Position>();
+        self.positions_reader_id = Some(positions.register_reader());
+
+        // register reader id for the PhysicsBody storage
+        let mut physics_bodies = world.write_storage::<PhysicsBody>();
+        self.physics_bodies_reader_id = Some(physics_bodies.register_reader());
+
+        // register reader id for the PhysicsCollider storage
+        let mut physics_colliders = world.write_storage::<PhysicsCollider>();
+        self.physics_colliders_reader_id = Some(physics_colliders.register_reader());
+    }
+}
+
+fn resolve_removals_modifications<'a>(
+    positions_events: impl Iterator<Item=&'a ComponentEvent>,
+    physics_bodies_events: impl Iterator<Item=&'a ComponentEvent>,
+    physics_colliders_events: impl Iterator<Item=&'a ComponentEvent>,
+
+    removed_physics_bodies: &mut BitSet,
+    modified_physics_bodies: &mut BitSet,
+    removed_physics_colliders: &mut BitSet,
+    modified_physics_colliders: &mut BitSet,
+) {
+    removed_physics_bodies.clear();
+    modified_physics_bodies.clear();
+    removed_physics_colliders.clear();
+    modified_physics_colliders.clear();
+
+    for event in positions_events {
+        match event {
+            // Adding or modifying a Position component affects both bodies
+            // and colliders
+            &ComponentEvent::Inserted(id) |
+            &ComponentEvent::Modified(id) => {
+                modified_physics_bodies.add(id);
+                modified_physics_colliders.add(id);
+            },
+
+            // Removing a Position component removes all bodies and
+            // colliders associated with that position
+            &ComponentEvent::Removed(id) => {
+                removed_physics_bodies.add(id);
+                removed_physics_colliders.add(id);
+            },
+        }
+    }
+
+    for event in physics_bodies_events {
+        match event {
+            &ComponentEvent::Inserted(id) |
+            &ComponentEvent::Modified(id) => {
+                modified_physics_bodies.add(id);
+            },
+
+            &ComponentEvent::Removed(id) => {
+                removed_physics_bodies.add(id);
+            },
+        }
+    }
+
+    for event in physics_colliders_events {
+        match event {
+            &ComponentEvent::Inserted(id) |
+            &ComponentEvent::Modified(id) => {
+                modified_physics_colliders.add(id);
+            },
+
+            &ComponentEvent::Removed(id) => {
+                removed_physics_colliders.add(id);
+            },
+        }
     }
 }
 
 fn sync_physics_bodies_to_engine(
-    entities: &EntitiesRes,
+    removed_physics_bodies: &BitSet,
+    modified_physics_bodies: &BitSet,
     positions: &WriteStorage<Position>,
     physics_bodies: &mut WriteStorage<PhysicsBody>,
     body_handles: &mut HashMap<Index, DefaultBodyHandle>,
     bodies: &mut DefaultBodySet<f64>,
 ) {
     // Handle removals
-    while let Some(&id) = body_handles.keys().next() {
-        let entity = entities.entity(id);
-        if !physics_bodies.contains(entity) {
-            if let Some(handle) = body_handles.remove(&id) {
-                bodies.remove(handle);
-            }
+    for id in removed_physics_bodies {
+        if let Some(handle) = body_handles.remove(&id) {
+            bodies.remove(handle);
         }
     }
 
     // Add or update the physics bodies
-    for (entity, &Position(pos), body) in (entities, positions, physics_bodies).join() {
-        let id = entity.id();
+    for (id, &Position(pos), body) in (modified_physics_bodies, positions, physics_bodies).join() {
         match body.handle {
             // Update existing rigid body
             Some(handle) => {
@@ -194,7 +323,8 @@ fn sync_physics_bodies_to_engine(
 }
 
 fn sync_physics_colliders_to_engine(
-    entities: &EntitiesRes,
+    removed_physics_colliders: &BitSet,
+    modified_physics_colliders: &BitSet,
     positions: &WriteStorage<Position>,
     physics_colliders: &mut WriteStorage<PhysicsCollider>,
     collider_handles: &mut HashMap<Index, DefaultColliderHandle>,
@@ -203,22 +333,18 @@ fn sync_physics_colliders_to_engine(
     ground: DefaultBodyHandle,
 ) {
     // Handle removals
-    while let Some(&id) = collider_handles.keys().next() {
-        let entity = entities.entity(id);
-        if !physics_colliders.contains(entity) {
-            if let Some(handle) = collider_handles.remove(&id) {
-                // Check if collider still exists since colliders are implicitly
-                // removed when the parent body is removed.
-                if colliders.get(handle).is_some() {
-                    colliders.remove(handle);
-                }
+    for id in removed_physics_colliders {
+        if let Some(handle) = collider_handles.remove(&id) {
+            // Check if collider still exists since colliders are implicitly
+            // removed when the parent body is removed.
+            if colliders.get(handle).is_some() {
+                colliders.remove(handle);
             }
         }
     }
 
     // Add or update the physics colliders
-    for (entity, &Position(pos), physics_collider) in (entities, positions, physics_colliders).join() {
-        let id = entity.id();
+    for (id, &Position(pos), physics_collider) in (modified_physics_colliders, positions, physics_colliders).join() {
         match physics_collider.handle {
             // Update existing collider
             Some(handle) => {

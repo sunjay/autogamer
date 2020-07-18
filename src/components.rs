@@ -1,4 +1,4 @@
-use specs::{World, WorldExt, Component, VecStorage, HashMapStorage, DenseVecStorage, NullStorage};
+use specs::{World, WorldExt, Component, VecStorage, HashMapStorage, FlaggedStorage, NullStorage};
 use nphysics2d::{
     math::ForceType,
     ncollide2d::pipeline::CollisionGroups,
@@ -53,12 +53,12 @@ pub struct Player;
 
 /// The position of an entity in world coordinates
 #[derive(Component, Debug, Clone, PartialEq)]
-#[storage(VecStorage)]
+#[storage(FlaggedStorage)]
 pub struct Position(pub Vec2);
 
 /// A physics rigid body
 #[derive(Component, Debug, Clone)]
-#[storage(DenseVecStorage)]
+#[storage(FlaggedStorage)]
 pub struct PhysicsBody {
     pub(crate) handle: Option<DefaultBodyHandle>,
     pub gravity_enabled: bool,
@@ -178,7 +178,7 @@ impl PhysicsBody {
 
 /// A physics collider
 #[derive(Component, Debug, Clone)]
-#[storage(DenseVecStorage)]
+#[storage(FlaggedStorage)]
 pub struct PhysicsCollider {
     pub(crate) handle: Option<DefaultColliderHandle>,
     /// Updating this after the component is initially added is not supported

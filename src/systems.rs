@@ -12,6 +12,18 @@ pub struct Systems {
 }
 
 impl Systems {
+    pub fn setup(&mut self, world: &mut World) {
+        let Self {
+            keyboard,
+            physics,
+            viewport_updater,
+        } = self;
+
+        keyboard.setup(world);
+        physics.setup(world);
+        viewport_updater.setup(world);
+    }
+
     pub fn run(&mut self, world: &World) {
         let Self {
             keyboard,
