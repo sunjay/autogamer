@@ -8,6 +8,7 @@ use sdl2::rect::Point;
 
 use crate::{
     Vec2,
+    Isometry,
     Velocity2,
     Image,
     Size,
@@ -190,6 +191,10 @@ pub struct PhysicsCollider {
     pub handle: Option<DefaultColliderHandle>,
     /// Updating this after the component is initially added is not supported
     pub shape: Shape,
+    /// The offset of this collider from the position of the parent body
+    ///
+    /// If there is no parent body, this field is ignored
+    pub offset: Vec2,
     /// Updating this after the component is initially added is not supported
     pub density: f64,
     /// Updating this after the component is initially added is not supported
@@ -205,6 +210,7 @@ impl Default for PhysicsCollider {
         Self {
             handle: Default::default(),
             shape: Shape::Rect(ShapeRect::new(Vec2::new(0.0, 0.0))),
+            offset: Default::default(),
             density: Default::default(),
             material: Default::default(),
             margin: 0.01,
@@ -238,10 +244,11 @@ impl PhysicsCollider {
             .with_blacklist(&[Self::ENEMY_COLLISION_GROUP])
     }
 
-    pub(crate) fn to_collider_desc(&self) -> ColliderDesc {
+    pub(crate) fn to_collider_desc(&self, base_pos: Vec2) -> ColliderDesc {
         let Self {
             handle: _,
             ref shape,
+            offset,
             density,
             material,
             margin,
@@ -250,6 +257,7 @@ impl PhysicsCollider {
         } = *self;
 
         ColliderDesc::new(shape.to_handle())
+            .position(Isometry::new(base_pos + offset, 0.0))
             .density(density)
             .material(MaterialHandle::new(material))
             .margin(margin)
@@ -257,12 +265,13 @@ impl PhysicsCollider {
             .sensor(sensor)
     }
 
-    pub(crate) fn update_collider(&self, collider: &mut Collider) {
+    pub(crate) fn update_collider(&self, collider: &mut Collider, base_pos: Vec2) {
         let Self {
             handle: _,
             // Updating shape is not currently supported because the various
             // shape primitives do not implement PartialEq
             shape: _,
+            offset,
             density,
             // Updating the material is not supported and checking if it changed
             // isn't easy because BasicMaterial doesn't implement PartialEq
@@ -274,12 +283,18 @@ impl PhysicsCollider {
             sensor,
         } = *self;
 
+        // Need to check each property first so we don't invalidate caches when
+        // there is no update
+
+        let pos = base_pos + offset;
+        if collider.position().translation.vector != pos {
+            collider.set_position(Isometry::new(pos, 0.0));
+        }
+
         // No way to update the density currently in nphysics API
         assert!((density - collider.density()).abs() < 0.0001,
             "changing collider density is not supported");
 
-        // Need to check first so we don't invalidate caches when there is
-        // no update
         if collider.margin() != margin {
             collider.set_margin(margin);
         }

@@ -149,16 +149,19 @@ pub struct PhysicsCollider {
 impl PhysicsCollider {
     #[new]
     //TODO(PyO3/pyo3#1025): `shape` should be a keyword-only argument with no default
-    #[args("*", shape="todo!()", collision_groups="None")]
-    pub fn new(shape: &PyAny, collision_groups: Option<CollisionGroups>) -> PyResult<Self> {
+    #[args("*", shape="todo!()", offset="None", collision_groups="None")]
+    pub fn new(shape: &PyAny, offset: Option<(f64, f64)>, collision_groups: Option<CollisionGroups>) -> PyResult<Self> {
         let shape = Shape::to_shape(shape)
             .ok_or_else(|| ValueError::py_err("Unknown shape"))?;
+        let (offset_x, offset_y) = offset.unwrap_or_default();
+        let offset = ag::Vec2::new(offset_x, offset_y);
         let collision_groups = collision_groups.map(|groups| groups.inner().clone())
             .unwrap_or_default();
 
         Ok(Self {
             component: ag::PhysicsCollider {
                 shape,
+                offset,
                 collision_groups,
                 ..ag::PhysicsCollider::default()
             },

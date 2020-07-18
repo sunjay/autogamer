@@ -351,7 +351,15 @@ fn sync_physics_colliders_to_engine(
                 let collider = colliders.get_mut(handle)
                     .expect("bug: invalid physics collider handle");
 
-                physics_collider.update_collider(collider);
+                let base_pos = if collider.body() != ground {
+                    // Position relative to parent body
+                    Vec2::new(0.0, 0.0)
+                } else {
+                    // Position relative to ground (i.e. the origin)
+                    pos
+                };
+
+                physics_collider.update_collider(collider, base_pos);
             },
 
             // Add a new collider
@@ -371,24 +379,23 @@ fn sync_physics_colliders_to_engine(
 
                 // Attempt to find an existing body associated with the same ID
                 // so we can use it as the parent of the collider (default: ground)
-                let (body_handle, rel_pos) = match body_handles.get(&id) {
+                let (body_handle, base_pos) = match body_handles.get(&id) {
                     Some(&handle) => {
                         let body_handle = BodyPartHandle(handle, 0);
                         // Position relative to parent body
-                        let rel_pos = Vec2::new(0.0, 0.0);
-                        (body_handle, rel_pos)
+                        let base_pos = Vec2::new(0.0, 0.0);
+                        (body_handle, base_pos)
                     },
 
                     None => {
                         let body_handle = BodyPartHandle(ground, 0);
                         // Position relative to ground (i.e. the origin)
-                        let rel_pos = pos;
-                        (body_handle, rel_pos)
+                        let base_pos = pos;
+                        (body_handle, base_pos)
                     },
                 };
 
-                let collider = physics_collider.to_collider_desc()
-                    .position(Isometry::new(rel_pos, 0.0))
+                let collider = physics_collider.to_collider_desc(base_pos)
                     // Store ID so updating from the physics world is easy
                     .user_data(id)
                     .build(body_handle);

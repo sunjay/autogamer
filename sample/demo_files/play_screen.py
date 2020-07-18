@@ -30,6 +30,7 @@ class PlayScreen(LevelScreen):
         player.add(PhysicsBody(mass=1.0))
         player.add(PhysicsCollider(
             shape=ShapeRect(width=70.0, height=80.0),
+            offset=(-35.0, -75.0),
             collision_groups=PLAYER_COLLISION_GROUPS,
         ))
         player.add(Health(6))
