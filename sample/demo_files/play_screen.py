@@ -27,7 +27,7 @@ class PlayScreen(LevelScreen):
             right_velocity=10.0,
             jump_velocity=20.0,
         ))
-        player.add(PhysicsBody(mass=1.0))
+        player.add(PhysicsBody(mass=100.0))
         player.add(PhysicsCollider(
             shape=ShapeRect(width=70.0, height=80.0),
             offset=(-35.0, -75.0),
