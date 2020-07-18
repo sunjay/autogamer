@@ -163,7 +163,9 @@ fn sync_physics_bodies_to_engine(
                     .expect("bug: invalid physics body handle");
 
                 body.apply_to_rigid_body(rigid_body);
-                rigid_body.set_position(Isometry::new(pos, 0.0));
+                if rigid_body.position().translation.vector != pos {
+                    rigid_body.set_position(Isometry::new(pos, 0.0));
+                }
             },
 
             // Add a new rigid body
@@ -224,7 +226,9 @@ fn sync_physics_colliders_to_engine(
                     .expect("bug: invalid physics collider handle");
 
                 physics_collider.update_collider(collider);
-                collider.set_position(Isometry::new(pos, 0.0));
+                if collider.position().translation.vector != pos {
+                    collider.set_position(Isometry::new(pos, 0.0));
+                }
             },
 
             // Add a new collider
