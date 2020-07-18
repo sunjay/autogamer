@@ -148,7 +148,6 @@ impl<'a> System<'a> for Physics {
 
         // Sync to the physics world
 
-        let start = std::time::Instant::now();
         sync_physics_bodies_to_engine(
             removed_physics_bodies,
             modified_physics_bodies,
@@ -168,14 +167,9 @@ impl<'a> System<'a> for Physics {
             body_handles,
             *ground,
         );
-        let elapsed = start.elapsed();
-        println!("sync: {} ms", elapsed.as_millis());
 
         // Run the next step of the simulation
 
-        mechanical_world.counters.enable();
-
-        let start = std::time::Instant::now();
         mechanical_world.step(
             geometrical_world,
             bodies,
@@ -183,18 +177,11 @@ impl<'a> System<'a> for Physics {
             joint_constraints,
             force_generators
         );
-        let elapsed = start.elapsed();
-        println!("step: {} ms", elapsed.as_millis());
-
-        println!("{}", mechanical_world.counters);
 
         //TODO: Copy collider events
 
         // Sync the results back from the physics world
-        let start = std::time::Instant::now();
         sync_engine_to_physics_bodies(&mut positions, &mut physics_bodies, bodies);
-        let elapsed = start.elapsed();
-        println!("back: {} ms", elapsed.as_millis());
 
         // Drain events caused by this system since we don't want to end up in
         // an infinite loop where we update things that we just updated
