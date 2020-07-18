@@ -2,7 +2,7 @@ use specs::{World, WorldExt, Component, VecStorage, HashMapStorage, DenseVecStor
 use nphysics2d::{
     math::ForceType,
     ncollide2d::pipeline::CollisionGroups,
-    object::{BodyStatus, DefaultBodyHandle, DefaultColliderHandle, Body},
+    object::{BodyStatus, DefaultBodyHandle, DefaultColliderHandle, Body, BodyPart},
     material::MaterialHandle,
 };
 use sdl2::rect::Point;
@@ -121,13 +121,30 @@ impl PhysicsBody {
             ref mut external_forces,
         } = *self;
 
-        // Update properites
+        // Update properites -- need to check if they have changed first so we
+        // don't invalidate the cache every frame for no reason
+
+        // These methods do not invalidate the cache if the value hasn't changed
+        // so no extra check is necessary
         rigid_body.enable_gravity(gravity_enabled);
         rigid_body.set_status(body_status);
-        rigid_body.set_velocity(velocity);
-        rigid_body.set_angular_inertia(angular_inertia);
-        rigid_body.set_mass(mass);
-        rigid_body.set_local_center_of_mass(local_center_of_mass);
+
+        let rb_vel = rigid_body.velocity();
+        if rb_vel.angular != velocity.angular || rb_vel.linear != velocity.linear {
+            rigid_body.set_velocity(velocity);
+        }
+
+        let local_inertia = rigid_body.local_inertia();
+        if local_inertia.angular != angular_inertia {
+            rigid_body.set_angular_inertia(angular_inertia);
+        }
+        if local_inertia.linear != mass {
+            rigid_body.set_mass(mass);
+        }
+
+        if rigid_body.local_center_of_mass() != local_center_of_mass {
+            rigid_body.set_local_center_of_mass(local_center_of_mass);
+        }
 
         // Applies forces by draining external force property
         let force = *external_forces;
@@ -143,8 +160,7 @@ impl PhysicsBody {
             velocity,
             angular_inertia,
             mass,
-            // No API to get this value from the RigidBody
-            local_center_of_mass: _,
+            local_center_of_mass,
             // Not a part of the RigidBody (specific to this component)
             external_forces: _,
         } = self;
@@ -153,9 +169,10 @@ impl PhysicsBody {
         *body_status = rigid_body.status();
         *velocity = *rigid_body.velocity();
         // Adapted from: https://github.com/amethyst/specs-physics/blob/8ec2243f25e5b994af3a6a0c2ae80bc5ebf65b7f/src/bodies.rs#L118-L120
-        let augmented_mass = rigid_body.augmented_mass();
-        *angular_inertia = augmented_mass.angular;
-        *mass = augmented_mass.linear;
+        let local_inertia = rigid_body.local_inertia();
+        *angular_inertia = local_inertia.angular;
+        *mass = local_inertia.linear;
+        *local_center_of_mass = rigid_body.local_center_of_mass();
     }
 }
 
@@ -221,7 +238,9 @@ impl PhysicsCollider {
             // isn't easy because BasicMaterial doesn't implement PartialEq
             material: _,
             margin,
-            collision_groups,
+            // Updating shape is not currently supported because the collision
+            // groups type does not implement PartialEq
+            collision_groups: _,
             sensor,
         } = *self;
 
@@ -229,8 +248,11 @@ impl PhysicsCollider {
         assert!((density - collider.density()).abs() < 0.0001,
             "changing collider density is not supported");
 
-        collider.set_margin(margin);
-        collider.set_collision_groups(collision_groups);
+        // Need to check first so we don't invalidate caches when there is
+        // no update
+        if collider.margin() != margin {
+            collider.set_margin(margin);
+        }
 
         // No way to update is_sensor
         assert_eq!(collider.is_sensor(), sensor,
