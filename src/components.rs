@@ -74,7 +74,7 @@ impl Default for PhysicsBody {
     fn default() -> Self {
         Self {
             handle: Default::default(),
-            gravity_enabled: Default::default(),
+            gravity_enabled: true,
             body_status: BodyStatus::Dynamic,
             velocity: Velocity2::zero(),
             angular_inertia: Default::default(),
@@ -183,7 +183,7 @@ impl Default for PhysicsCollider {
             shape: Shape::Rect(ShapeRect::new(Vec2::new(0.0, 0.0))),
             density: Default::default(),
             material: Default::default(),
-            margin: Default::default(),
+            margin: 0.01,
             collision_groups: Default::default(),
             sensor: Default::default(),
         }
