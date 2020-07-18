@@ -23,7 +23,7 @@ class PlayScreen(LevelScreen):
         # Add a player to the game
         player = self.level.add_player()
         player.add(PlatformerControls(
-            left_velocity=10.0,
+            left_velocity=-10.0,
             right_velocity=10.0,
             jump_velocity=20.0,
         ))
