@@ -12,7 +12,7 @@ class PlayScreen(LevelScreen):
         self.level.load(level1_map)
 
         # Configure gravity in the physics engine
-        self.level.physics.set_gravity((0.0, -9.81))
+        self.level.physics.set_gravity((0.0, 9.81))
 
         player_spritesheet = CharacterSpritesheet(
             "images/character/female.png",
