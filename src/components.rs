@@ -153,8 +153,10 @@ impl PhysicsBody {
 
         // Applies forces by draining external force property
         let force = *external_forces;
-        *external_forces = Force2::zero();
-        rigid_body.apply_force(0, &force, ForceType::Force, true);
+        if force.linear != Vec2::new(0.0, 0.0) || force.angular != 0.0 {
+            rigid_body.apply_force(0, &force, ForceType::Force, true);
+            *external_forces = Force2::zero();
+        }
     }
 
     pub(crate) fn update_from_rigid_body(&mut self, rigid_body: &RigidBody) {
