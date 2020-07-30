@@ -5,6 +5,9 @@ use specs::{
     SystemData,
     World,
     WorldExt,
+    Entity,
+    Entities,
+    Write,
     WriteStorage,
     Join,
     ReaderId,
@@ -24,16 +27,26 @@ use nphysics2d::{
     force_generator::DefaultForceGeneratorSet,
     joint::DefaultJointConstraintSet,
     world::{DefaultMechanicalWorld, DefaultGeometricalWorld},
+    ncollide2d::{
+        pipeline::CollisionObjectSet,
+        narrow_phase::{
+            ContactEvent as PhysicsContactEvent,
+            ProximityEvent as PhysicsProximityEvent,
+        },
+    },
 };
 
 use crate::math::Vec2;
-use crate::{Position, PhysicsBody, PhysicsCollider, Isometry};
+use crate::{Position, PhysicsBody, PhysicsCollider, Isometry, ContactEvents, ProximityEvents, ContactType, ContactEvent, ProximityEvent};
 
 #[derive(SystemData)]
 pub struct Data<'a> {
+    pub entities: Entities<'a>,
     pub positions: WriteStorage<'a, Position>,
     pub physics_bodies: WriteStorage<'a, PhysicsBody>,
     pub physics_colliders: WriteStorage<'a, PhysicsCollider>,
+    pub contact_events: Write<'a, ContactEvents>,
+    pub proximity_events: Write<'a, ProximityEvents>,
 }
 
 pub struct Physics {
@@ -123,9 +136,12 @@ impl<'a> System<'a> for Physics {
         } = self;
 
         let Data {
+            entities,
             mut positions,
             mut physics_bodies,
             mut physics_colliders,
+            mut contact_events,
+            mut proximity_events,
         } = data;
 
         let positions_reader_id = positions_reader_id.as_mut()
@@ -178,7 +194,30 @@ impl<'a> System<'a> for Physics {
             force_generators
         );
 
-        //TODO: Copy collider events
+        // Write contact events
+        contact_events.iter_write(geometrical_world.contact_events().iter().map(|&event| {
+            let (contact_type, collider1, collider2) = match event {
+                PhysicsContactEvent::Started(collider1, collider2) => {
+                    (ContactType::Started, collider1, collider2)
+                },
+                PhysicsContactEvent::Stopped(collider1, collider2) => {
+                    (ContactType::Stopped, collider1, collider2)
+                },
+            };
+            let collider1 = entity_from_collider_handle(&entities, colliders, collider1);
+            let collider2 = entity_from_collider_handle(&entities, colliders, collider2);
+
+            ContactEvent {collider1, collider2, contact_type}
+        }));
+
+        // Write proximity events
+        proximity_events.iter_write(geometrical_world.proximity_events().iter().map(|&event| {
+            let PhysicsProximityEvent {collider1, collider2, prev_status, new_status: current_status} = event;
+            let collider1 = entity_from_collider_handle(&entities, colliders, collider1);
+            let collider2 = entity_from_collider_handle(&entities, colliders, collider2);
+
+            ProximityEvent {collider1, collider2, prev_status, current_status}
+        }));
 
         // Sync the results back from the physics world
         sync_engine_to_physics_bodies(&mut positions, &mut physics_bodies, bodies);
@@ -205,6 +244,21 @@ impl<'a> System<'a> for Physics {
         let mut physics_colliders = world.write_storage::<PhysicsCollider>();
         self.physics_colliders_reader_id = Some(physics_colliders.register_reader());
     }
+}
+
+fn entity_from_collider_handle(
+    entities: &Entities,
+    colliders: &DefaultColliderSet<f64>,
+    handle: DefaultColliderHandle,
+) -> Entity {
+    let id: Index = *colliders.collision_object(handle)
+        .expect("bug: handle was not a valid collider")
+        .user_data()
+        .expect("bug: collider did not contain any user data")
+        .downcast_ref()
+        .expect("bug: collider user data was not an ID");
+
+    entities.entity(id)
 }
 
 fn resolve_removals_modifications<'a>(
