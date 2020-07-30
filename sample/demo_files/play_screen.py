@@ -23,15 +23,14 @@ class PlayScreen(LevelScreen):
         # Add a player to the game
         player = self.level.add_player()
         player.add(PlatformerControls(
-            left_velocity=-10.0,
-            right_velocity=10.0,
-            jump_velocity=20.0,
+            left_velocity=-100.0,
+            right_velocity=100.0,
+            jump_velocity=200.0,
         ))
-        player.add(PhysicsBody(mass=100.0))
+        player.add(PhysicsBody(mass=40.0))
         player.add(PhysicsCollider(
             shape=ShapeRect(width=70.0, height=80.0),
             offset=(-35.0, -75.0),
-            density=1000.0,
             collision_groups=PLAYER_COLLISION_GROUPS,
         ))
         player.add(Health(6))
