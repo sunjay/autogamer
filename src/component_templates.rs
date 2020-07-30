@@ -6,7 +6,7 @@ pub use entity_editor::*;
 
 use thiserror::Error;
 
-use crate::{TileId, Currency};
+use crate::{TileId, Currency, PhysicsCollider};
 
 #[derive(Debug, Error)]
 pub enum TemplateError {
@@ -50,6 +50,7 @@ impl<'a> ApplyComponentTemplates for EntityEditor<'a> {
         // All template functions must be listed here
         let templates: &[Template<P>] = &[
             currency,
+            ladder,
             damage,
         ];
 
@@ -61,7 +62,7 @@ impl<'a> ApplyComponentTemplates for EntityEditor<'a> {
     }
 }
 
-pub fn currency<'a, P: CustomProps>(
+fn currency<'a, P: CustomProps>(
     entity: &EntityEditor<'a>,
     id: TileId,
     _tile_type: &str,
@@ -75,7 +76,22 @@ pub fn currency<'a, P: CustomProps>(
     Ok(())
 }
 
-pub fn damage<'a, P: CustomProps>(
+fn ladder<'a, P: CustomProps>(
+    entity: &EntityEditor<'a>,
+    _id: TileId,
+    tile_type: &str,
+    _props: &P,
+) -> Result<(), TemplateError> {
+    if tile_type == "ladder" {
+        entity.get_mut::<PhysicsCollider>()
+            .expect("bug: all tiles should be physics colliders")
+            .sensor = true;
+    }
+
+    Ok(())
+}
+
+fn damage<'a, P: CustomProps>(
     entity: &EntityEditor<'a>,
     id: TileId,
     tile_type: &str,
