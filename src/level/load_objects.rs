@@ -15,6 +15,7 @@ use crate::{
     Position,
     ApplyComponentTemplates,
     JointHashMap,
+    EntityEditor,
 };
 
 use super::{LoadError, TileId, OBJECT_DRAW_ORDER, image_params::TiledImageParams};
@@ -217,11 +218,13 @@ fn apply_tile_object_templates(
         data: obj_props,
     };
 
-    world.create_entity()
+    let entity = world.create_entity()
         .with(Position(world_pos))
         .with(sprite)
-        .apply_templates(*id, obj_tile_type, &props)?
         .build();
+
+    let entity = EntityEditor::new(world, entity);
+    entity.apply_templates(*id, obj_tile_type, &props)?;
 
     Ok(())
 }

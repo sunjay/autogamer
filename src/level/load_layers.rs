@@ -17,6 +17,7 @@ use crate::{
     Position,
     Shape,
     PhysicsCollider,
+    EntityEditor,
 };
 
 use super::{TILE_DRAW_ORDER, TileId, LoadError, image_params::TiledImageParams};
@@ -138,12 +139,14 @@ fn load_map_layer(
                 ..PhysicsCollider::default()
             };
 
-            world.create_entity()
+            let entity = world.create_entity()
                 .with(Position(world_pos))
                 .with(sprite)
                 .with(collider)
-                .apply_templates(*id, tile_type, props)?
                 .build();
+
+            let entity = EntityEditor::new(world, entity);
+            entity.apply_templates(*id, tile_type, props)?
         }
     }
 
