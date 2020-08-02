@@ -36,7 +36,7 @@
   * Systems must define a method called `run` that takes `level: Level`
   * Taking `Level` as a parameter is useful becuase it gives you full access to
     the ECS and to the physics parameters
-  * Example:
+  * Example: using events
       ```py
       # Switches the direction of gravity when the spacebar is pressed
       class KeyboardControls(System):
@@ -46,6 +46,21 @@
                       if event.key == Key.SPACEBAR:
                           gx, gy = level.get_gravity()
                           level.set_gravity((gx, -gy))
+      ```
+  * Example: joining over components
+      ```py
+      class Movement(System):
+          def run(self, level):
+              # Join over components and their corresponding entity
+              for entity, pos, vel in level.join(Entity, Position, Velocity):
+                  # Check for optional components or default to a value
+                  mult = entity.get(SpeedMultiplier) or SpeedMultipler()
+                  x_vel = vel.x * mult.x
+                  y_vel = vel.y * mult.y
+
+                  # Update position based on velocity
+                  pos.x += x_vel
+                  pos.y += y_vel
       ```
 
 ## Characters - Players & Enemies
