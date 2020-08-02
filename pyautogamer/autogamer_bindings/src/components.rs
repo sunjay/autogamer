@@ -43,15 +43,10 @@ components! {
     ViewportTarget,
 }
 
-/// The parent class of all components
-#[pyclass(subclass)]
-#[derive(Debug, Default, Clone)]
-pub struct Component {}
-
 /// A marker component given to an entity to indicate that it represents one of
 /// the players of the game. This component is automatically added when you call
 /// `Game.add_player`.
-#[pyclass(extends=Component)]
+#[pyclass]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Player {
     component: ag::Player,
@@ -60,15 +55,15 @@ pub struct Player {
 #[pymethods]
 impl Player {
     #[new]
-    pub fn new() -> (Self, Component) {
-        (Self {
+    pub fn new() -> Self {
+        Self {
             component: ag::Player,
-        }, Component::default())
+        }
     }
 }
 
 /// The position of an entity
-#[pyclass(extends=Component)]
+#[pyclass]
 #[derive(Debug, Clone)]
 pub struct Position {
     component: ag::Position,
@@ -78,10 +73,10 @@ pub struct Position {
 impl Position {
     #[new]
     #[args("*", x="0.0", y="0.0")]
-    pub fn new(x: f64, y: f64) -> (Self, Component) {
-        (Self {
+    pub fn new(x: f64, y: f64) -> Self {
+        Self {
             component: ag::Position(ag::Vec2::new(x, y)),
-        }, Component::default())
+        }
     }
 
     #[getter]
@@ -110,7 +105,7 @@ impl Position {
 }
 
 /// Describes a body in the physics engine
-#[pyclass(extends=Component)]
+#[pyclass]
 #[derive(Debug, Clone)]
 pub struct PhysicsBody {
     component: ag::PhysicsBody,
@@ -121,13 +116,13 @@ impl PhysicsBody {
     #[new]
     //TODO(PyO3/pyo3#1025): `mass` should be a keyword-only argument with no default
     #[args("*", mass="0.0")]
-    pub fn new(mass: f64) -> (Self, Component) {
-        (Self {
+    pub fn new(mass: f64) -> Self {
+        Self {
             component: ag::PhysicsBody {
                 mass,
                 ..ag::PhysicsBody::default()
             },
-        }, Component::default())
+        }
     }
 
     #[getter]
@@ -144,7 +139,7 @@ impl PhysicsBody {
 }
 
 /// Describes a collider in the physics engine
-#[pyclass(extends=Component)]
+#[pyclass]
 #[derive(Debug, Clone)]
 pub struct PhysicsCollider {
     component: ag::PhysicsCollider,
@@ -155,7 +150,7 @@ impl PhysicsCollider {
     #[new]
     //TODO(PyO3/pyo3#1025): `shape` should be a keyword-only argument with no default
     #[args("*", shape="todo!()", offset="None", density="0.0", collision_groups="None")]
-    pub fn new(shape: &PyAny, offset: Option<(f64, f64)>, density: f64, collision_groups: Option<CollisionGroups>) -> PyResult<(Self, Component)> {
+    pub fn new(shape: &PyAny, offset: Option<(f64, f64)>, density: f64, collision_groups: Option<CollisionGroups>) -> PyResult<Self> {
         let shape = Shape::to_shape(shape)
             .ok_or_else(|| ValueError::py_err("Unknown shape"))?;
         let (offset_x, offset_y) = offset.unwrap_or_default();
@@ -163,7 +158,7 @@ impl PhysicsCollider {
         let collision_groups = collision_groups.map(|groups| groups.inner().clone())
             .unwrap_or_default();
 
-        Ok((Self {
+        Ok(Self {
             component: ag::PhysicsCollider {
                 shape,
                 offset,
@@ -171,11 +166,11 @@ impl PhysicsCollider {
                 collision_groups,
                 ..ag::PhysicsCollider::default()
             },
-        }, Component::default()))
+        })
     }
 }
 
-#[pyclass(extends=Component)]
+#[pyclass]
 #[derive(Debug, Clone)]
 pub struct Sprite {
     component: ag::Sprite,
@@ -187,7 +182,7 @@ impl From<ag::Sprite> for Sprite {
     }
 }
 
-#[pyclass(extends=Component)]
+#[pyclass]
 #[derive(Debug, Clone)]
 pub struct CharacterSprites {
     component: ag::CharacterSprites,
@@ -210,7 +205,7 @@ impl CharacterSprites {
 /// its velocity to the configured values. `left_velocity` and `right_velocity`
 /// will be applied to the x-axis velocity. `jump_velocity` will be applied to
 /// the y-axis velocity.
-#[pyclass(extends=Component)]
+#[pyclass]
 #[derive(Debug, Clone)]
 pub struct PlatformerControls {
     component: ag::PlatformerControls,
@@ -230,14 +225,14 @@ impl PlatformerControls {
         left_velocity: f64,
         right_velocity: f64,
         jump_velocity: f64,
-    ) -> (Self, Component) {
-        (Self {
+    ) -> Self {
+        Self {
             component: ag::PlatformerControls {
                 left_velocity,
                 right_velocity,
                 jump_velocity,
             },
-        }, Component::default())
+        }
     }
 
     #[getter]
@@ -278,7 +273,7 @@ impl PlatformerControls {
 }
 
 /// The health of an entity
-#[pyclass(extends=Component)]
+#[pyclass]
 #[derive(Debug, Clone)]
 pub struct Health {
     component: ag::Health,
@@ -287,10 +282,10 @@ pub struct Health {
 #[pymethods]
 impl Health {
     #[new]
-    pub fn new(initial_health: u32) -> (Self, Component) {
-        (Self {
+    pub fn new(initial_health: u32) -> Self {
+        Self {
             component: ag::Health(initial_health),
-        }, Component::default())
+        }
     }
 
     #[getter]
@@ -310,7 +305,7 @@ impl Health {
 /// itself around the position of the entity.
 ///
 /// Warning: Multiple entities should not have this component at the same time.
-#[pyclass(extends=Component)]
+#[pyclass]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ViewportTarget {
     component: ag::ViewportTarget,
@@ -319,9 +314,9 @@ pub struct ViewportTarget {
 #[pymethods]
 impl ViewportTarget {
     #[new]
-    pub fn new() -> (Self, Component) {
-        (Self {
+    pub fn new() -> Self {
+        Self {
             component: ag::ViewportTarget,
-        }, Component::default())
+        }
     }
 }
