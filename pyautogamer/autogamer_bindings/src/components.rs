@@ -1,7 +1,12 @@
+use std::sync::Arc;
+
 use autogamer as ag;
 use pyo3::prelude::*;
+use pyo3::types::PyString;
 use pyo3::exceptions::ValueError;
-use specs::{World, WorldExt};
+use specs::{World, WorldExt, BitSet};
+use bstringify::bstringify;
+use parking_lot::Mutex;
 
 use crate::*;
 
@@ -27,6 +32,93 @@ macro_rules! components {
             )*
 
             Err(ValueError::py_err("Unknown component"))
+        }
+
+        /// Represented a Python ECS component class
+        ///
+        /// Note that this represents the component class itself, not a
+        /// downcasted instance of that class.
+        #[derive(Debug, Clone)]
+        pub enum PyComponentClass {
+            /// Not a real component, but allows entities to be iterated along
+            /// with their components.
+            Entity,
+
+            $($component),*
+        }
+
+        impl PyComponentClass {
+            pub fn from_py(class: &PyAny) -> PyResult<Self> {
+                //TODO: Using __name__ like this isn't foolproof. Would be
+                // better to use the unique ID of the object for each component
+                // class. No idea how to do that yet...
+                let name = class.getattr("__name__")?;
+                let name: &PyString = name.cast_as()?;
+                let name = name.as_bytes()?;
+
+                #[deny(unreachable_patterns)]
+                Ok(match name {
+                    b"Entity" => PyComponentClass::Entity,
+
+                    $(bstringify!($component) => PyComponentClass::$component,)*
+
+                    _ => return Err(ValueError::py_err("Unknown component")),
+                })
+            }
+
+            /// Returns the name of this component class
+            pub fn name(&self) -> &'static str {
+                use PyComponentClass::*;
+                match self {
+                    Entity => "Entity",
+
+                    $($component => stringify!($component),)*
+                }
+            }
+
+            /// Filter the given bitset based on this component's storage
+            ///
+            /// The bitset represents which ECS entities have this component
+            pub fn filter_bitset(&self, world: &World, bitset: &mut BitSet) {
+                use PyComponentClass::*;
+                match self {
+                    // This does not filter out any components because it is not
+                    // a real component
+                    Entity => {},
+
+                    $($component => {
+                        let storage = world.read_component::<ag::$component>();
+                        let mask = storage.mask();
+                        *bitset &= mask;
+                    },)*
+                }
+            }
+
+            /// Reads a component from the world and returns it as a PyObject
+            ///
+            /// Returns `None` if this component doesn't exist for this entity
+            pub fn read(&self, level: &Arc<Mutex<ag::Level>>, entity: specs::Entity, py: Python) -> PyResult<Option<PyObject>> {
+                Ok(match self {
+                    PyComponentClass::Entity => {
+                        let entity = Entity::new(level.clone(), entity);
+                        Some(PyCell::new(py, entity)?.to_object(py))
+                    },
+
+                    $(PyComponentClass::$component => {
+                        let level = level.lock();
+                        let world = level.world();
+
+                        let storage = world.read_component::<ag::$component>();
+                        match storage.get(entity) {
+                            Some(component) => Some(PyCell::new(py, $component {
+                                component: component.clone(),
+                            })?.to_object(py)),
+
+                            None => None,
+                        }
+                    },)*
+                })
+            }
         }
     };
 }

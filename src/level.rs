@@ -187,6 +187,10 @@ impl Level {
         }
     }
 
+    pub fn world(&self) -> &World {
+        &self.world
+    }
+
     pub fn world_mut(&mut self) -> &mut World {
         &mut self.world
     }

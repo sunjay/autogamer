@@ -59,6 +59,7 @@ name = "autogamer_bindings"
 version = "0.1.0"
 dependencies = [
  "autogamer",
+ "bstringify",
  "parking_lot",
  "pyo3",
  "specs",
@@ -84,6 +85,12 @@ name = "bitflags"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf1de2fe8c75bc145a2f577add951f8134889b4795d47466a54a5c846d691693"
+
+[[package]]
+name = "bstringify"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bd769563b4ea2953e2825c9e6b7470a5f55f67e0be00030bf3e390a2a6071f64"
 
 [[package]]
 name = "bumpalo"

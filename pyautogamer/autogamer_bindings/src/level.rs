@@ -3,6 +3,7 @@ use std::sync::Arc;
 use autogamer as ag;
 use pyo3::prelude::*;
 use pyo3::PyTraverseError;
+use pyo3::types::PyTuple;
 use pyo3::gc::{PyGCProtocol, PyVisit};
 use pyo3::exceptions::ValueError;
 use parking_lot::Mutex;
@@ -66,6 +67,15 @@ impl Level {
 
         let level = Self {level, game, physics};
         Ok((level, base))
+    }
+
+    #[args(components="*")]
+    fn join(&self, components: &PyTuple) -> PyResult<Join> {
+        let components = components.into_iter()
+            .map(PyComponentClass::from_py)
+            .collect::<Result<Vec<_>, _>>()?;
+        let level = self.level.clone();
+        Ok(Join::new(level, components))
     }
 
     /// Adds a new entity to this level
