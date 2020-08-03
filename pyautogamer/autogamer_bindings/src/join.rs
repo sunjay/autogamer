@@ -2,10 +2,10 @@ use std::sync::Arc;
 
 use autogamer as ag;
 use pyo3::prelude::*;
-use pyo3::{PyIterProtocol, PyNativeType};
+use pyo3::PyIterProtocol;
 use pyo3::exceptions::ValueError;
 use pyo3::types::PyTuple;
-use specs::{World, WorldExt, BitSet, hibitset::{BitIter, BitSetLike}, world::Index};
+use specs::{WorldExt, BitSet, hibitset::{BitIter, BitSetLike}, world::Index};
 use parking_lot::Mutex;
 
 use crate::*;
@@ -124,7 +124,7 @@ impl PyIterProtocol for Join {
 
     fn __next__(mut slf: PyRefMut<Self>) -> PyResult<Option<PyObject>> {
         slf.next()
-            .map(|opt| opt.map(|tuple| tuple.to_object(tuple.py())))
+            .map(|opt| opt.map(|tuple| tuple.to_object(slf.py())))
             .transpose()
     }
 }
