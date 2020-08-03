@@ -94,10 +94,14 @@ macro_rules! components {
                 }
             }
 
-            /// Reads a component from the world and returns it as a PyObject
+            /// Reads a *copy* of a component from the world and returns it as a
+            /// PyObject
+            ///
+            /// Modifying the copy does not update the component assocaited with
+            /// this entity.
             ///
             /// Returns `None` if this component doesn't exist for this entity
-            pub fn read(&self, level: &Arc<Mutex<ag::Level>>, entity: specs::Entity, py: Python) -> PyResult<Option<PyObject>> {
+            pub fn read_copy(&self, level: &Arc<Mutex<ag::Level>>, entity: specs::Entity, py: Python) -> PyResult<Option<PyObject>> {
                 Ok(match self {
                     PyComponentClass::Entity => {
                         let entity = Entity::new(level.clone(), entity);
