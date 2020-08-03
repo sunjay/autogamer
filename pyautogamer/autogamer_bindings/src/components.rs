@@ -101,7 +101,12 @@ macro_rules! components {
             /// this entity.
             ///
             /// Returns `None` if this component doesn't exist for this entity
-            pub fn read_copy(&self, level: &Arc<Mutex<ag::Level>>, entity: specs::Entity, py: Python) -> PyResult<Option<PyObject>> {
+            pub fn read_copy(
+                &self,
+                level: &Arc<Mutex<ag::Level>>,
+                entity: specs::Entity,
+                py: Python,
+            ) -> PyResult<Option<PyObject>> {
                 Ok(match self {
                     PyComponentClass::Entity => {
                         let entity = Entity::new(level.clone(), entity);
@@ -116,6 +121,35 @@ macro_rules! components {
                         match storage.get(entity) {
                             Some(component) => Some(PyCell::new(py, $component {
                                 component: component.clone(),
+                            })?.to_object(py)),
+
+                            None => None,
+                        }
+                    },)*
+                })
+            }
+
+            /// Removes this component class from the given entity and returns
+            /// its previous value if any
+            pub fn remove(
+                &self,
+                world: &World,
+                entity: specs::Entity,
+                py: Python,
+            ) -> PyResult<Option<PyObject>> {
+                Ok(match self {
+                    PyComponentClass::Entity => {
+                        return Err(ValueError::py_err("`Entity` is not a component, so it cannot be removed from an entity"));
+                    },
+
+                    $(PyComponentClass::$component => {
+                        let mut storage = world.write_component::<ag::$component>();
+                        let value = storage.get(entity).cloned();
+                        storage.remove(entity);
+
+                        match value {
+                            Some(component) => Some(PyCell::new(py, $component {
+                                component,
                             })?.to_object(py)),
 
                             None => None,

@@ -37,8 +37,13 @@ impl Entity {
 
     /// Removes a component from this entity given its component class and
     /// returns its previous value if any
-    pub fn remove(&self, component_class: &PyAny) -> PyResult<PyObject> {
-        todo!()
+    pub fn remove(&self, component_class: &PyAny) -> PyResult<Option<PyObject>> {
+        let class = PyComponentClass::from_py(component_class)?;
+
+        let mut level = self.level.lock();
+        let world = level.world_mut();
+
+        class.remove(world, self.entity, component_class.py())
     }
 
     /// Returns a *copy* of a component for this entity given its component
