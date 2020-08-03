@@ -260,6 +260,16 @@ impl Player {
             component: ag::Player,
         }
     }
+
+    /// Returns a copy of this component
+    ///
+    /// Modifying a copy of a component does not modify the original component
+    /// it was copied from
+    pub fn copy(&self) -> Self {
+        Self {
+            component: self.component.clone(),
+        }
+    }
 }
 
 /// The position of an entity
@@ -294,6 +304,17 @@ impl Position {
         Self {
             entity: None,
             component: ag::Position(ag::Vec2::new(x, y)),
+        }
+    }
+
+    /// Returns a copy of this component
+    ///
+    /// Modifying a copy of a component does not modify the original component
+    /// it was copied from
+    pub fn copy(&self) -> Self {
+        Self {
+            entity: None,
+            component: self.component.clone(),
         }
     }
 
@@ -359,6 +380,17 @@ impl PhysicsBody {
         }
     }
 
+    /// Returns a copy of this component
+    ///
+    /// Modifying a copy of a component does not modify the original component
+    /// it was copied from
+    pub fn copy(&self) -> Self {
+        Self {
+            entity: None,
+            component: self.component.clone(),
+        }
+    }
+
     #[getter]
     pub fn mass(&self) -> f64 {
         self.component.mass
@@ -419,6 +451,17 @@ impl PhysicsCollider {
             },
         })
     }
+
+    /// Returns a copy of this component
+    ///
+    /// Modifying a copy of a component does not modify the original component
+    /// it was copied from
+    pub fn copy(&self) -> Self {
+        Self {
+            entity: None,
+            component: self.component.clone(),
+        }
+    }
 }
 
 #[pyclass]
@@ -441,6 +484,20 @@ impl From<(Arc<Mutex<ag::Level>>, specs::Entity, ag::Sprite)> for Sprite {
     fn from((level, entity, component): (Arc<Mutex<ag::Level>>, specs::Entity, ag::Sprite)) -> Self {
         let entity = Some((level, entity));
         Self {entity, component}
+    }
+}
+
+#[pymethods]
+impl Sprite {
+    /// Returns a copy of this component
+    ///
+    /// Modifying a copy of a component does not modify the original component
+    /// it was copied from
+    pub fn copy(&self) -> Self {
+        Self {
+            entity: None,
+            component: self.component.clone(),
+        }
     }
 }
 
@@ -471,6 +528,17 @@ impl From<(Arc<Mutex<ag::Level>>, specs::Entity, ag::CharacterSprites)> for Char
 impl CharacterSprites {
     pub fn default_sprite(&self) -> Option<Sprite> {
         self.component.default_sprite().map(Into::into)
+    }
+
+    /// Returns a copy of this component
+    ///
+    /// Modifying a copy of a component does not modify the original component
+    /// it was copied from
+    pub fn copy(&self) -> Self {
+        Self {
+            entity: None,
+            component: self.component.clone(),
+        }
     }
 }
 
@@ -523,6 +591,17 @@ impl PlatformerControls {
                 right_velocity,
                 jump_velocity,
             },
+        }
+    }
+
+    /// Returns a copy of this component
+    ///
+    /// Modifying a copy of a component does not modify the original component
+    /// it was copied from
+    pub fn copy(&self) -> Self {
+        Self {
+            entity: None,
+            component: self.component.clone(),
         }
     }
 
@@ -594,6 +673,17 @@ impl Health {
         }
     }
 
+    /// Returns a copy of this component
+    ///
+    /// Modifying a copy of a component does not modify the original component
+    /// it was copied from
+    pub fn copy(&self) -> Self {
+        Self {
+            entity: None,
+            component: self.component.clone(),
+        }
+    }
+
     #[getter]
     pub fn health(&self) -> u32 {
         self.component.0
@@ -634,6 +724,16 @@ impl ViewportTarget {
     pub fn new() -> Self {
         Self {
             component: ag::ViewportTarget,
+        }
+    }
+
+    /// Returns a copy of this component
+    ///
+    /// Modifying a copy of a component does not modify the original component
+    /// it was copied from
+    pub fn copy(&self) -> Self {
+        Self {
+            component: self.component.clone(),
         }
     }
 }
