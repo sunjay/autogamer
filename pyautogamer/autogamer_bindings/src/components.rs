@@ -22,17 +22,27 @@ macro_rules! components {
         pub fn write_component(world: &mut World, entity: specs::Entity, component: &PyAny) -> PyResult<()> {
             $(
                 if let Ok(cell) = component.downcast::<PyCell<$component>>() {
-                    let component = cell.borrow().component.clone();
-
-                    world.write_component().insert(entity, component)
-                        .expect(concat!("unable to insert component `", stringify!($component), "`"));
-
+                    let component = cell.borrow();
+                    component.write(world, entity);
                     return Ok(());
                 }
             )*
 
             Err(ValueError::py_err("Unknown component"))
         }
+
+        pub trait PyWriteComponent {
+            fn write(&self, world: &mut World, entity: specs::Entity);
+        }
+
+        $(
+            impl PyWriteComponent for $component {
+                fn write(&self, world: &mut World, entity: specs::Entity) {
+                    world.write_component().insert(entity, self.component.clone())
+                        .expect(concat!("unable to insert component `", stringify!($component), "`"));
+                }
+            }
+        )*
 
         /// Represented a Python ECS component class
         ///
@@ -94,6 +104,41 @@ macro_rules! components {
                 }
             }
 
+            /// Reads a component from the world and returns it as a PyObject
+            ///
+            /// Modifying the component will update the component assocaited
+            /// with this entity.
+            ///
+            /// Returns `None` if this component doesn't exist for this entity
+            pub fn read(
+                &self,
+                level: &Arc<Mutex<ag::Level>>,
+                entity: specs::Entity,
+                py: Python,
+            ) -> PyResult<Option<PyObject>> {
+                Ok(match self {
+                    PyComponentClass::Entity => {
+                        let entity = Entity::new(level.clone(), entity);
+                        Some(PyCell::new(py, entity)?.to_object(py))
+                    },
+
+                    $(PyComponentClass::$component => {
+                        let level_lock = level.lock();
+                        let world = level_lock.world();
+
+                        let storage = world.read_component::<ag::$component>();
+                        match storage.get(entity) {
+                            Some(component) => Some(PyCell::new(
+                                py,
+                                $component::from((level.clone(), entity, component.clone())),
+                            )?.to_object(py)),
+
+                            None => None,
+                        }
+                    },)*
+                })
+            }
+
             /// Reads a *copy* of a component from the world and returns it as a
             /// PyObject
             ///
@@ -119,9 +164,10 @@ macro_rules! components {
 
                         let storage = world.read_component::<ag::$component>();
                         match storage.get(entity) {
-                            Some(component) => Some(PyCell::new(py, $component {
-                                component: component.clone(),
-                            })?.to_object(py)),
+                            Some(component) => Some(PyCell::new(
+                                py,
+                                $component::from(component.clone()),
+                            )?.to_object(py)),
 
                             None => None,
                         }
@@ -148,9 +194,10 @@ macro_rules! components {
                         storage.remove(entity);
 
                         match value {
-                            Some(component) => Some(PyCell::new(py, $component {
-                                component,
-                            })?.to_object(py)),
+                            Some(component) => Some(PyCell::new(
+                                py,
+                                $component::from(component),
+                            )?.to_object(py)),
 
                             None => None,
                         }
@@ -173,6 +220,17 @@ components! {
     ViewportTarget,
 }
 
+fn update_component<C: PyWriteComponent>(
+    entity: &Option<(Arc<Mutex<ag::Level>>, specs::Entity)>,
+    component: &C,
+) {
+    if let Some((level, entity)) = entity {
+        let mut level = level.lock();
+        let world = level.world_mut();
+        component.write(world, *entity);
+    }
+}
+
 /// A marker component given to an entity to indicate that it represents one of
 /// the players of the game. This component is automatically added when you call
 /// `Game.add_player`.
@@ -180,6 +238,18 @@ components! {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Player {
     component: ag::Player,
+}
+
+impl From<ag::Player> for Player {
+    fn from(component: ag::Player) -> Self {
+        Self {component}
+    }
+}
+
+impl From<(Arc<Mutex<ag::Level>>, specs::Entity, ag::Player)> for Player {
+    fn from((_, _, component): (Arc<Mutex<ag::Level>>, specs::Entity, ag::Player)) -> Self {
+        Self {component}
+    }
 }
 
 #[pymethods]
@@ -196,7 +266,24 @@ impl Player {
 #[pyclass]
 #[derive(Debug, Clone)]
 pub struct Position {
+    entity: Option<(Arc<Mutex<ag::Level>>, specs::Entity)>,
     component: ag::Position,
+}
+
+impl From<ag::Position> for Position {
+    fn from(component: ag::Position) -> Self {
+        Self {
+            entity: None,
+            component,
+        }
+    }
+}
+
+impl From<(Arc<Mutex<ag::Level>>, specs::Entity, ag::Position)> for Position {
+    fn from((level, entity, component): (Arc<Mutex<ag::Level>>, specs::Entity, ag::Position)) -> Self {
+        let entity = Some((level, entity));
+        Self {entity, component}
+    }
 }
 
 #[pymethods]
@@ -205,6 +292,7 @@ impl Position {
     #[args("*", x="0.0", y="0.0")]
     pub fn new(x: f64, y: f64) -> Self {
         Self {
+            entity: None,
             component: ag::Position(ag::Vec2::new(x, y)),
         }
     }
@@ -214,31 +302,46 @@ impl Position {
         self.component.0.x
     }
 
-    //TODO: Should the setter have the side effect of updating this component
-    // for a given entity? Maybe this struct should store Option<Entity>
-    //#[setter]
-    //pub fn set_x(&mut self, x: f64) {
-    //    self.component.0.x = x;
-    //}
+    #[setter]
+    pub fn set_x(&mut self, x: f64) {
+        self.component.0.x = x;
+        update_component(&self.entity, self);
+    }
 
     #[getter]
     pub fn y(&self) -> f64 {
         self.component.0.y
     }
 
-    //TODO: Should the setter have the side effect of updating this component
-    // for a given entity? Maybe this struct should store Option<Entity>
-    //#[setter]
-    //pub fn set_y(&mut self, y: f64) {
-    //    self.component.0.y = y;
-    //}
+    #[setter]
+    pub fn set_y(&mut self, y: f64) {
+        self.component.0.y = y;
+        update_component(&self.entity, self);
+    }
 }
 
 /// Describes a body in the physics engine
 #[pyclass]
 #[derive(Debug, Clone)]
 pub struct PhysicsBody {
+    entity: Option<(Arc<Mutex<ag::Level>>, specs::Entity)>,
     component: ag::PhysicsBody,
+}
+
+impl From<ag::PhysicsBody> for PhysicsBody {
+    fn from(component: ag::PhysicsBody) -> Self {
+        Self {
+            entity: None,
+            component,
+        }
+    }
+}
+
+impl From<(Arc<Mutex<ag::Level>>, specs::Entity, ag::PhysicsBody)> for PhysicsBody {
+    fn from((level, entity, component): (Arc<Mutex<ag::Level>>, specs::Entity, ag::PhysicsBody)) -> Self {
+        let entity = Some((level, entity));
+        Self {entity, component}
+    }
 }
 
 #[pymethods]
@@ -248,6 +351,7 @@ impl PhysicsBody {
     #[args("*", mass="0.0")]
     pub fn new(mass: f64) -> Self {
         Self {
+            entity: None,
             component: ag::PhysicsBody {
                 mass,
                 ..ag::PhysicsBody::default()
@@ -260,19 +364,35 @@ impl PhysicsBody {
         self.component.mass
     }
 
-    //TODO: Should the setter have the side effect of updating this component
-    // for a given entity? Maybe this struct should store Option<Entity>
-    //#[setter]
-    //pub fn set_mass(&mut self, mass: f64) {
-    //    self.component.mass = mass;
-    //}
+    #[setter]
+    pub fn set_mass(&mut self, mass: f64) {
+        self.component.mass = mass;
+        update_component(&self.entity, self);
+    }
 }
 
 /// Describes a collider in the physics engine
 #[pyclass]
 #[derive(Debug, Clone)]
 pub struct PhysicsCollider {
+    entity: Option<(Arc<Mutex<ag::Level>>, specs::Entity)>,
     component: ag::PhysicsCollider,
+}
+
+impl From<ag::PhysicsCollider> for PhysicsCollider {
+    fn from(component: ag::PhysicsCollider) -> Self {
+        Self {
+            entity: None,
+            component,
+        }
+    }
+}
+
+impl From<(Arc<Mutex<ag::Level>>, specs::Entity, ag::PhysicsCollider)> for PhysicsCollider {
+    fn from((level, entity, component): (Arc<Mutex<ag::Level>>, specs::Entity, ag::PhysicsCollider)) -> Self {
+        let entity = Some((level, entity));
+        Self {entity, component}
+    }
 }
 
 #[pymethods]
@@ -289,6 +409,7 @@ impl PhysicsCollider {
             .unwrap_or_default();
 
         Ok(Self {
+            entity: None,
             component: ag::PhysicsCollider {
                 shape,
                 offset,
@@ -303,24 +424,46 @@ impl PhysicsCollider {
 #[pyclass]
 #[derive(Debug, Clone)]
 pub struct Sprite {
+    entity: Option<(Arc<Mutex<ag::Level>>, specs::Entity)>,
     component: ag::Sprite,
 }
 
 impl From<ag::Sprite> for Sprite {
     fn from(component: ag::Sprite) -> Self {
-        Self {component}
+        Self {
+            entity: None,
+            component,
+        }
+    }
+}
+
+impl From<(Arc<Mutex<ag::Level>>, specs::Entity, ag::Sprite)> for Sprite {
+    fn from((level, entity, component): (Arc<Mutex<ag::Level>>, specs::Entity, ag::Sprite)) -> Self {
+        let entity = Some((level, entity));
+        Self {entity, component}
     }
 }
 
 #[pyclass]
 #[derive(Debug, Clone)]
 pub struct CharacterSprites {
+    entity: Option<(Arc<Mutex<ag::Level>>, specs::Entity)>,
     component: ag::CharacterSprites,
 }
 
 impl From<ag::CharacterSprites> for CharacterSprites {
     fn from(component: ag::CharacterSprites) -> Self {
-        Self {component}
+        Self {
+            entity: None,
+            component,
+        }
+    }
+}
+
+impl From<(Arc<Mutex<ag::Level>>, specs::Entity, ag::CharacterSprites)> for CharacterSprites {
+    fn from((level, entity, component): (Arc<Mutex<ag::Level>>, specs::Entity, ag::CharacterSprites)) -> Self {
+        let entity = Some((level, entity));
+        Self {entity, component}
     }
 }
 
@@ -338,7 +481,24 @@ impl CharacterSprites {
 #[pyclass]
 #[derive(Debug, Clone)]
 pub struct PlatformerControls {
+    entity: Option<(Arc<Mutex<ag::Level>>, specs::Entity)>,
     component: ag::PlatformerControls,
+}
+
+impl From<ag::PlatformerControls> for PlatformerControls {
+    fn from(component: ag::PlatformerControls) -> Self {
+        Self {
+            entity: None,
+            component,
+        }
+    }
+}
+
+impl From<(Arc<Mutex<ag::Level>>, specs::Entity, ag::PlatformerControls)> for PlatformerControls {
+    fn from((level, entity, component): (Arc<Mutex<ag::Level>>, specs::Entity, ag::PlatformerControls)) -> Self {
+        let entity = Some((level, entity));
+        Self {entity, component}
+    }
 }
 
 #[pymethods]
@@ -357,6 +517,7 @@ impl PlatformerControls {
         jump_velocity: f64,
     ) -> Self {
         Self {
+            entity: None,
             component: ag::PlatformerControls {
                 left_velocity,
                 right_velocity,
@@ -370,43 +531,57 @@ impl PlatformerControls {
         self.component.left_velocity
     }
 
-    //TODO: Should the setter have the side effect of updating this component
-    // for a given entity? Maybe this struct should store Option<Entity>
-    //#[setter]
-    //pub fn set_left_velocity(&mut self, left_velocity: f64) {
-    //    self.component.left_velocity = left_velocity;
-    //}
+    #[setter]
+    pub fn set_left_velocity(&mut self, left_velocity: f64) {
+        self.component.left_velocity = left_velocity;
+        update_component(&self.entity, self);
+    }
 
     #[getter]
     pub fn right_velocity(&self) -> f64 {
         self.component.right_velocity
     }
 
-    //TODO: Should the setter have the side effect of updating this component
-    // for a given entity? Maybe this struct should store Option<Entity>
-    //#[setter]
-    //pub fn set_right_velocity(&mut self, right_velocity: f64) {
-    //    self.component.right_velocity = right_velocity;
-    //}
+    #[setter]
+    pub fn set_right_velocity(&mut self, right_velocity: f64) {
+        self.component.right_velocity = right_velocity;
+        update_component(&self.entity, self);
+    }
 
     #[getter]
     pub fn jump_velocity(&self) -> f64 {
         self.component.jump_velocity
     }
 
-    //TODO: Should the setter have the side effect of updating this component
-    // for a given entity? Maybe this struct should store Option<Entity>
-    //#[setter]
-    //pub fn set_jump_velocity(&mut self, jump_velocity: f64) {
-    //   self.component.jump_velocity = jump_velocity;
-    //}
+    #[setter]
+    pub fn set_jump_velocity(&mut self, jump_velocity: f64) {
+        self.component.jump_velocity = jump_velocity;
+        update_component(&self.entity, self);
+    }
 }
 
 /// The health of an entity
 #[pyclass]
 #[derive(Debug, Clone)]
 pub struct Health {
+    entity: Option<(Arc<Mutex<ag::Level>>, specs::Entity)>,
     component: ag::Health,
+}
+
+impl From<ag::Health> for Health {
+    fn from(component: ag::Health) -> Self {
+        Self {
+            entity: None,
+            component,
+        }
+    }
+}
+
+impl From<(Arc<Mutex<ag::Level>>, specs::Entity, ag::Health)> for Health {
+    fn from((level, entity, component): (Arc<Mutex<ag::Level>>, specs::Entity, ag::Health)) -> Self {
+        let entity = Some((level, entity));
+        Self {entity, component}
+    }
 }
 
 #[pymethods]
@@ -414,6 +589,7 @@ impl Health {
     #[new]
     pub fn new(initial_health: u32) -> Self {
         Self {
+            entity: None,
             component: ag::Health(initial_health),
         }
     }
@@ -423,12 +599,11 @@ impl Health {
         self.component.0
     }
 
-    //TODO: Should the setter have the side effect of updating this component
-    // for a given entity? Maybe this struct should store Option<Entity>
-    //#[setter]
-    //pub fn set_health(&mut self, health: u32) {
-    //    self.component.0 = health;
-    //}
+    #[setter]
+    pub fn set_health(&mut self, health: u32) {
+        self.component.0 = health;
+        update_component(&self.entity, self);
+    }
 }
 
 /// If an entity is given this component, the viewport will attempt to center
@@ -439,6 +614,18 @@ impl Health {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ViewportTarget {
     component: ag::ViewportTarget,
+}
+
+impl From<ag::ViewportTarget> for ViewportTarget {
+    fn from(component: ag::ViewportTarget) -> Self {
+        Self {component}
+    }
+}
+
+impl From<(Arc<Mutex<ag::Level>>, specs::Entity, ag::ViewportTarget)> for ViewportTarget {
+    fn from((_, _, component): (Arc<Mutex<ag::Level>>, specs::Entity, ag::ViewportTarget)) -> Self {
+        Self {component}
+    }
 }
 
 #[pymethods]

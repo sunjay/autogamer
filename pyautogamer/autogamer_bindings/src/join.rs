@@ -97,9 +97,7 @@ impl Iterator for Join {
 
         let mut values = Vec::with_capacity(self.components.len());
         for class in &self.components {
-            //TODO: Use `read` instead of `read_copy` because we want modifying
-            // these components to modify the version associated with the entity
-            let value = match class.read_copy(&self.level, entity, py) {
+            let value = match class.read(&self.level, entity, py) {
                 Ok(Some(value)) => value,
 
                 // Raise an exception if a component we were iterating over has
