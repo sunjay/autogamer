@@ -1,10 +1,11 @@
 use specs::{System, SystemData, World, WorldExt, ReadStorage, Write, Read, ReaderId, prelude::ResourceId};
 
-use crate::{ContactEvents, ProximityEvents, CollisionsMap, ContactEvent, ProximityEvent, ContactType, Proximity, Position};
+use crate::{ContactEvents, ProximityEvents, CollisionsMap, ContactEvent, ProximityEvent, ContactType, Proximity, Position, PhysicsCollider};
 
 #[derive(SystemData)]
 pub struct Data<'a> {
     pub positions: ReadStorage<'a, Position>,
+    pub physics_colliders: ReadStorage<'a, PhysicsCollider>,
     pub contact_events: Read<'a, ContactEvents>,
     pub proximity_events: Read<'a, ProximityEvents>,
     pub collisions: Write<'a, CollisionsMap>,
@@ -27,6 +28,7 @@ impl<'a> System<'a> for CollisionsDetector {
 
         let Data {
             positions,
+            physics_colliders,
             contact_events,
             proximity_events,
             mut collisions,
@@ -42,33 +44,71 @@ impl<'a> System<'a> for CollisionsDetector {
         for event in contact_events.read(contact_events_reader_id) {
             let &ContactEvent {collider1, collider2, contact_type} = event;
 
-            let (pos1, pos2) = match (positions.get(collider1), positions.get(collider2)) {
-                (Some(&Position(pos1)), Some(&Position(pos2))) => (pos1, pos2),
-                // Only colliders with positions can be used here
+            let components = (
+                positions.get(collider1),
+                physics_colliders.get(collider1),
+                positions.get(collider2),
+                physics_colliders.get(collider2),
+            );
+            let (
+                pos1,
+                shape1,
+                offset1,
+                pos2,
+                shape2,
+                offset2,
+            ) = match components {
+                (
+                    Some(&Position(pos1)),
+                    Some(PhysicsCollider {shape: shape1, offset: offset1, ..}),
+                    Some(&Position(pos2)),
+                    Some(PhysicsCollider {shape: shape2, offset: offset2, ..}),
+                ) => (pos1, shape1, offset1, pos2, shape2, offset2),
+
+                // Only colliders with all the necessary components can be used
                 _ => continue,
             };
 
+            // We use the centers because the bounding boxes can sometimes
+            // overlap a bit when two entities are in contact. This still isn't
+            // foolproof though and can fail with smaller entities and more
+            // overlap.
+            //TODO: Is there a better way to detect which side of an entity is
+            // being touched? For example, we could take the midpoint of the
+            // bottom an entity and compare it to the top of another entity to
+            // see if they are very "close". This is more precise than just
+            // doing a <= comparision, but has issues of its own with choosing
+            // how to decide what "close" means.
+            let center1 = pos1 + shape1.center().coords + offset1;
+            let center2 = pos2 + shape2.center().coords + offset2;
+
             let (collisions1, collisions2) = collisions.get_or_default2(collider1, collider2);
 
-            //TODO: This is a very crude way of determining this. A better way
-            // would be to take the bounding box into account and compare the
-            // center of each entity.
             let colliders1;
             let colliders2;
-            if pos1.y <= pos2.y {
+            // collider1 is above collider2
+            if center1.y <= center2.y {
                 colliders1 = &mut collisions1.touching_bottom;
                 colliders2 = &mut collisions2.touching_top;
-            } else if pos1.y > pos2.y {
+
+            // collider1 is below collider2
+            } else if center1.y > center2.y {
                 colliders1 = &mut collisions1.touching_top;
                 colliders2 = &mut collisions2.touching_bottom;
-            } else if pos1.x <= pos2.x {
+
+            // collider1 is to the left of collider2
+            } else if center1.x <= center2.x {
                 colliders1 = &mut collisions1.touching_right;
                 colliders2 = &mut collisions2.touching_left;
-            } else if pos1.x > pos2.x {
+
+            // collider1 is to the right of collider2
+            } else if center1.x > center2.x {
                 colliders1 = &mut collisions1.touching_left;
                 colliders2 = &mut collisions2.touching_right;
+
             } else {
-                // This means that one of the colliders is inside the other one
+                // One of the colliders is inside the other one (handled through
+                // proximity events)
                 continue;
             }
 

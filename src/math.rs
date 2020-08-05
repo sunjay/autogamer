@@ -2,7 +2,7 @@ use std::fmt;
 
 use nphysics2d::{
     object::DefaultBodyHandle,
-    ncollide2d::shape::ShapeHandle,
+    ncollide2d::{bounding_volume::local_aabb, shape::ShapeHandle},
 };
 
 // Math types
@@ -32,6 +32,7 @@ pub type ShapeCircle = nphysics2d::ncollide2d::shape::Ball<f64>;
 pub type ShapePolyline = nphysics2d::ncollide2d::shape::Polyline<f64>;
 pub type ShapeConvexPolygon = nphysics2d::ncollide2d::shape::ConvexPolygon<f64>;
 pub type ShapeCompound = nphysics2d::ncollide2d::shape::Compound<f64>;
+pub type Aabb = nphysics2d::ncollide2d::bounding_volume::AABB<f64>;
 
 #[derive(Clone)]
 pub enum Shape {
@@ -43,6 +44,25 @@ pub enum Shape {
 }
 
 impl Shape {
+    pub fn bounds(&self) -> Aabb {
+        match self {
+            Shape::Rect(shape) => local_aabb(shape),
+            Shape::Circle(shape) => local_aabb(shape),
+            Shape::Polyline(shape) => local_aabb(shape),
+            Shape::ConvexPolygon(shape) => local_aabb(shape),
+            Shape::Compound(shape) => local_aabb(shape),
+        }
+    }
+
+    /// Returns the center of the bounding box of this shape
+    ///
+    /// Note that this is a local center, the actual center of an entity needs
+    /// to take into account the entity's position as well as the offset field
+    /// of the collider.
+    pub fn center(&self) -> Point2 {
+        self.bounds().center()
+    }
+
     pub(crate) fn to_handle(&self) -> ShapeHandle<f64> {
         use Shape::*;
         match self {
