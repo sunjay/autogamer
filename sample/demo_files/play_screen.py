@@ -25,7 +25,7 @@ class PlayScreen(LevelScreen):
         player.add(PlatformerControls(
             left_velocity=-100.0,
             right_velocity=100.0,
-            jump_velocity=200.0,
+            jump_velocity=-200.0,
         ))
         player.add(PhysicsBody(mass=40.0))
         player.add(PhysicsCollider(
