@@ -32,7 +32,35 @@ pub type ShapeCircle = nphysics2d::ncollide2d::shape::Ball<f64>;
 pub type ShapePolyline = nphysics2d::ncollide2d::shape::Polyline<f64>;
 pub type ShapeConvexPolygon = nphysics2d::ncollide2d::shape::ConvexPolygon<f64>;
 pub type ShapeCompound = nphysics2d::ncollide2d::shape::Compound<f64>;
+/// Aabb = Axis-aligned bounding box
 pub type Aabb = nphysics2d::ncollide2d::bounding_volume::AABB<f64>;
+
+pub trait AabbIntersection {
+    /// Assuming that this Aabb is intersecting with the given Aabb, this method
+    /// computes the Aabb that represents that intersection.
+    fn intersected(&self, other: &Self) -> Self;
+}
+
+impl AabbIntersection for Aabb {
+    fn intersected(&self, other: &Self) -> Self {
+        let mins1 = self.mins();
+        let mins2 = other.mins();
+        let maxs1 = self.maxs();
+        let maxs2 = other.maxs();
+
+        let mins = Point2::new(
+            maxs1.x.min(maxs2.x),
+            maxs1.y.min(maxs2.y),
+        );
+        let maxs = Point2::new(
+            mins1.x.max(mins2.x),
+            mins1.y.max(mins2.y),
+        );
+
+        Aabb::new(mins, maxs)
+    }
+
+}
 
 #[derive(Clone)]
 pub enum Shape {

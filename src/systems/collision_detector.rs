@@ -1,6 +1,6 @@
 use specs::{System, SystemData, World, WorldExt, ReadStorage, Write, Read, ReaderId, prelude::ResourceId};
 
-use crate::{ContactEvents, ProximityEvents, CollisionsMap, ContactEvent, ProximityEvent, ContactType, Proximity, Position, PhysicsCollider};
+use crate::{ContactEvents, ProximityEvents, CollisionsMap, ContactEvent, ProximityEvent, ContactType, Proximity, Position, PhysicsCollider, Isometry, AabbIntersection};
 
 #[derive(SystemData)]
 pub struct Data<'a> {
@@ -69,18 +69,34 @@ impl<'a> System<'a> for CollisionsDetector {
                 _ => continue,
             };
 
-            // We use the centers because the bounding boxes can sometimes
-            // overlap a bit when two entities are in contact. This still isn't
-            // foolproof though and can fail with smaller entities and more
-            // overlap.
-            //TODO: Is there a better way to detect which side of an entity is
-            // being touched? For example, we could take the midpoint of the
-            // bottom an entity and compare it to the top of another entity to
-            // see if they are very "close". This is more precise than just
-            // doing a <= comparision, but has issues of its own with choosing
-            // how to decide what "close" means.
-            let center1 = pos1 + shape1.center().coords + offset1;
-            let center2 = pos2 + shape2.center().coords + offset2;
+            // Using the intersection of the bounding boxes to accurately
+            // determine which side each entity is on. The intersection is
+            // guaranteed to be aligned with the center of one of the entities
+            // on either the x-axis or the y-axis.
+            //
+            //                                       +---------+
+            //    +---------------------------+      |         |
+            //    | A                         |      | B       |
+            //    |             *             |      |    *    |
+            //    |                           |  +---|=========|-----------+
+            //    +-------+=====*=====+-------+  | D |    *    |           |
+            //            | C         |          |   +=========+           |
+            //            |     *     |          |            *            |
+            //            |           |          |                         |
+            //            +-----------+          +-------------------------+
+            //
+            // Legend:
+            // - "*" denotes a center of something
+            // - "=" denotes a region of intersection
+            //
+            // The center of the intersection on the left aligns with the y-axis
+            // of A and C. The center of the intersection on the right aligns
+            // with the y-axis of B but *not* D.
+            let bounds1 = shape1.bounds().transform_by(&Isometry::new(pos1 + offset1, 0.0));
+            let bounds2 = shape2.bounds().transform_by(&Isometry::new(pos2 + offset2, 0.0));
+            let center1 = bounds1.center();
+            let center2 = bounds2.center();
+            let icenter = bounds1.intersected(&bounds2).center();
 
             let (collisions1, collisions2) = collisions.get_or_default2(collider1, collider2);
 
