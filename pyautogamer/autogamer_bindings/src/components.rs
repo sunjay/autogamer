@@ -576,21 +576,23 @@ impl PlatformerControls {
     #[args(
         "*",
         //TODO(PyO3/pyo3#1025): These should be keyword-only arguments with no defaults
-        left_velocity = "0.0",
-        right_velocity = "0.0",
+        horizontal_velocity = "0.0",
         jump_velocity = "0.0",
+        //TODO: Arguments below this line can continue to have a default value
+        midair_horizontal_multiplier = "1.0",
     )]
     pub fn new(
-        left_velocity: f64,
-        right_velocity: f64,
+        horizontal_velocity: f64,
         jump_velocity: f64,
+        midair_horizontal_multiplier: f64,
     ) -> Self {
         Self {
             entity: None,
             component: ag::PlatformerControls {
-                left_velocity,
-                right_velocity,
+                horizontal_velocity,
                 jump_velocity,
+                midair_horizontal_multiplier,
+                ..ag::PlatformerControls::default()
             },
         }
     }
@@ -607,24 +609,13 @@ impl PlatformerControls {
     }
 
     #[getter]
-    pub fn left_velocity(&self) -> f64 {
-        self.component.left_velocity
+    pub fn horizontal_velocity(&self) -> f64 {
+        self.component.horizontal_velocity
     }
 
     #[setter]
-    pub fn set_left_velocity(&mut self, left_velocity: f64) {
-        self.component.left_velocity = left_velocity;
-        update_component(&self.entity, self);
-    }
-
-    #[getter]
-    pub fn right_velocity(&self) -> f64 {
-        self.component.right_velocity
-    }
-
-    #[setter]
-    pub fn set_right_velocity(&mut self, right_velocity: f64) {
-        self.component.right_velocity = right_velocity;
+    pub fn set_horizontal_velocity(&mut self, horizontal_velocity: f64) {
+        self.component.horizontal_velocity = horizontal_velocity;
         update_component(&self.entity, self);
     }
 
@@ -636,6 +627,17 @@ impl PlatformerControls {
     #[setter]
     pub fn set_jump_velocity(&mut self, jump_velocity: f64) {
         self.component.jump_velocity = jump_velocity;
+        update_component(&self.entity, self);
+    }
+
+    #[getter]
+    pub fn midair_horizontal_multiplier(&self) -> f64 {
+        self.component.midair_horizontal_multiplier
+    }
+
+    #[setter]
+    pub fn set_midair_horizontal_multiplier(&mut self, midair_horizontal_multiplier: f64) {
+        self.component.midair_horizontal_multiplier = midair_horizontal_multiplier;
         update_component(&self.entity, self);
     }
 }

@@ -21,6 +21,7 @@ use crate::{
     ColliderDesc,
     Collider,
     ShapeRect,
+    Key,
 };
 
 pub use nphysics2d::ncollide2d::pipeline::CollisionGroups;
@@ -344,16 +345,50 @@ impl CharacterSprites {
     }
 }
 
-/// An entity with this component will respond to arrow key presses by setting
-/// its velocity to the configured values. `left_velocity` and `right_velocity`
-/// will be applied to the x-axis velocity. `jump_velocity` will be applied to
-/// the y-axis velocity.
+/// An entity with this component will respond to key presses by setting its
+/// velocity to the configured values.
 #[derive(Component, Debug, Clone, PartialEq)]
 #[storage(HashMapStorage)]
 pub struct PlatformerControls {
-    pub left_velocity: f64,
-    pub right_velocity: f64,
+    /// The key used to move the entity to the left (default: left arrow key)
+    pub left_key: Key,
+    /// The key used to move the entity to the right (default: right arrow key)
+    pub right_key: Key,
+    /// The key used to make the entity initiate a jump (default: spacebar)
+    pub jump_key: Key,
+
+    /// The velocity applied on the x-axis when the left or right arrow keys are
+    /// pressed. The value will be negated for the left arrow key to allow it to
+    /// move in that direction.
+    ///
+    /// If you want the keys to have the opposite effect, set this to a negative
+    /// value.
+    pub horizontal_velocity: f64,
+    /// The velocity applied to the y-axis when the jump key (default: spacebar)
+    /// is pressed. This is just the initial velocity while the entity is still
+    /// on the ground.
+    ///
+    /// Note: the y-axis in the game coordinate system goes down, so this value
+    /// is usually negative for games where jumping results in the entity going
+    /// "up".
     pub jump_velocity: f64,
+    /// A multiplier applied to the horizontal velocity when the entity is not
+    /// touching the ground. Used to change the affect of the left and right
+    /// keys while an entity is in the air.
+    pub midair_horizontal_multiplier: f64,
+}
+
+impl Default for PlatformerControls {
+    fn default() -> Self {
+        Self {
+            left_key: Key::Left,
+            right_key: Key::Right,
+            jump_key: Key::Space,
+            horizontal_velocity: 0.0,
+            jump_velocity: 0.0,
+            midair_horizontal_multiplier: 1.0,
+        }
+    }
 }
 
 /// The health of an entity

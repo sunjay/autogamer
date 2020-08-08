@@ -46,6 +46,15 @@ impl Extend<Event> for EventStream {
     }
 }
 
+impl<'a> IntoIterator for &'a EventStream {
+    type IntoIter = EventStreamIterator<'a>;
+    type Item = <Self::IntoIter as Iterator>::Item;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
 #[derive(Debug)]
 pub struct EventStreamIterator<'a> {
     events: &'a [Event],
