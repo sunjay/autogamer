@@ -68,9 +68,11 @@ fn currency<'a, P: CustomProps>(
     _tile_type: &str,
     props: &P,
 ) -> Result<(), TemplateError> {
-    if let Some(value) = props.get_u32("currency_value", id) {
+    if let Some(value) = props.get_i32("currency_value", id) {
         let value = value?;
         entity.add(Currency(value))?;
+        // Allow entities to pass through this entity
+        make_sensor(entity);
     }
 
     Ok(())
@@ -83,9 +85,7 @@ fn ladder<'a, P: CustomProps>(
     _props: &P,
 ) -> Result<(), TemplateError> {
     if tile_type == "ladder" {
-        entity.get_mut::<PhysicsCollider>()
-            .expect("bug: all tiles should be physics colliders")
-            .sensor = true;
+        make_sensor(entity);
     }
 
     Ok(())
@@ -99,4 +99,14 @@ fn damage<'a, P: CustomProps>(
 ) -> Result<(), TemplateError> {
     //TODO
     Ok(())
+}
+
+/// Retrieves the physics collider component of the given entity and makes it
+/// into a sensor. A sensor will not generate contact events, but will generate
+/// proximity events. That means that you can interact with it, but it won't
+/// stop something from passing through it.
+fn make_sensor(entity: &EntityEditor) {
+    let mut collider = entity.get_mut::<PhysicsCollider>()
+        .expect("bug: all tiles should have a physics collider component");
+    collider.sensor = true;
 }

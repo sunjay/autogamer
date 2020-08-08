@@ -295,6 +295,7 @@ impl Level {
 
         // Run dispatcher
         self.systems.run(&mut self.world);
+        self.world.maintain();
 
         // Only update the actual viewport if the systems changed the viewport
         // resource

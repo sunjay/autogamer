@@ -34,6 +34,7 @@ class PlayScreen(LevelScreen):
             collision_groups=PLAYER_COLLISION_GROUPS,
         ))
         player.add(Health(6))
+        player.add(Wallet())
         player.add(ViewportTarget())
         player.add(player_sprites.default_sprite())
         player.add(player_sprites)

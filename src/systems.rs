@@ -2,6 +2,7 @@ mod physics;
 mod keyboard;
 mod viewport_updater;
 mod collision_detector;
+mod currency_system;
 
 use specs::{World, System};
 
@@ -11,6 +12,7 @@ pub struct Systems {
     pub physics: physics::Physics,
     pub collision_detector: collision_detector::CollisionsDetector,
     pub viewport_updater: viewport_updater::ViewportUpdater,
+    pub currency_system: currency_system::CurrencySystem,
 }
 
 impl Systems {
@@ -20,12 +22,14 @@ impl Systems {
             physics,
             collision_detector,
             viewport_updater,
+            currency_system,
         } = self;
 
         keyboard.setup(world);
         physics.setup(world);
         collision_detector.setup(world);
         viewport_updater.setup(world);
+        currency_system.setup(world);
     }
 
     pub fn run(&mut self, world: &World) {
@@ -34,6 +38,7 @@ impl Systems {
             physics,
             collision_detector,
             viewport_updater,
+            currency_system,
         } = self;
 
         keyboard.run(world.system_data());
@@ -43,5 +48,7 @@ impl Systems {
             || collision_detector.run(world.system_data()),
             || viewport_updater.run(world.system_data()),
         );
+
+        currency_system.run(world.system_data());
     }
 }

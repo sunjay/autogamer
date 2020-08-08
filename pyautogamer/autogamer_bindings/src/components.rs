@@ -218,6 +218,7 @@ components! {
     PlatformerControls,
     Health,
     ViewportTarget,
+    Wallet,
 }
 
 fn update_component<C: PyWriteComponent>(
@@ -735,5 +736,69 @@ impl ViewportTarget {
         Self {
             component: self.component.clone(),
         }
+    }
+}
+
+/// The amount of currency collected by this entity so far.
+///
+/// The amount may become negative if enough negative-value currency components
+/// are collected.
+///
+/// This component must be present for an entity to be able to interact with
+/// other entities that have `Currency` components.
+#[pyclass]
+#[derive(Debug, Clone)]
+pub struct Wallet {
+    entity: Option<(Arc<Mutex<ag::Level>>, specs::Entity)>,
+    component: ag::Wallet,
+}
+
+impl From<ag::Wallet> for Wallet {
+    fn from(component: ag::Wallet) -> Self {
+        Self {
+            entity: None,
+            component,
+        }
+    }
+}
+
+impl From<(Arc<Mutex<ag::Level>>, specs::Entity, ag::Wallet)> for Wallet {
+    fn from((level, entity, component): (Arc<Mutex<ag::Level>>, specs::Entity, ag::Wallet)) -> Self {
+        let entity = Some((level, entity));
+        Self {entity, component}
+    }
+}
+
+#[pymethods]
+impl Wallet {
+    #[new]
+    #[args(initial_balance = 0)]
+    pub fn new(initial_balance: i32) -> Self {
+        Self {
+            entity: None,
+            component: ag::Wallet(initial_balance),
+        }
+    }
+
+    /// Returns a copy of this component
+    ///
+    /// Modifying a copy of a component does not modify the original component
+    /// it was copied from
+    pub fn copy(&self) -> Self {
+        Self {
+            entity: None,
+            component: self.component.clone(),
+        }
+    }
+
+    #[getter]
+    pub fn balance(&self) -> i32 {
+        self.component.0
+    }
+
+    #[setter]
+    pub fn set_balance(&mut self, balance: i32) {
+        self.component.0 = balance;
+        update_component(&self.entity, self);
     }
 }

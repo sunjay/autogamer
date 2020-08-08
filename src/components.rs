@@ -43,6 +43,7 @@ components! {
     PlatformerControls,
     Health,
     ViewportTarget,
+    Wallet,
     Currency,
 }
 
@@ -368,11 +369,26 @@ pub struct Health(pub u32);
 #[storage(NullStorage)]
 pub struct ViewportTarget;
 
-/// If an entity with this component collides with a player, that player will
-/// collect this amount of currency and this entity will be removed
+/// The amount of currency collected by this entity so far.
+///
+/// The balance may become negative if enough negative-value currency components
+/// are collected.
+///
+/// This component must be present for an entity to be able to interact with
+/// other entities that have `Currency` components.
+#[derive(Component, Debug, Default, Clone, PartialEq)]
+#[storage(HashMapStorage)]
+pub struct Wallet(pub i32);
+
+/// If an entity with this component collides with an entity that has a
+/// `Wallet` component, this amount of currency will be added to the wallet
+/// and the entity with this currency component will be removed.
+///
+/// If the amount is negative, this will actually remove currency from the
+/// wallet instead of adding it.
 ///
 /// Note that the entity must have some collision geometry in order for
 /// collisions to be detected.
 #[derive(Component, Debug, Clone, PartialEq)]
 #[storage(HashMapStorage)]
-pub struct Currency(pub u32);
+pub struct Currency(pub i32);

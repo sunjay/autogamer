@@ -26,4 +26,5 @@ __all__ = [
     "PlatformerControls",
     "Health",
     "ViewportTarget",
+    "Wallet",
 ]
