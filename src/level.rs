@@ -78,7 +78,7 @@ impl From<(PathBuf, io::Error)> for LoadError {
 
 #[derive(Debug, Clone, Error)]
 #[error("{0}")]
-pub struct Unsupported(String);
+pub struct Unsupported(pub(crate) String);
 
 /// A unique ID for a value retrieved from a tiled map file
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -95,9 +95,14 @@ impl fmt::Display for TileId {
 macro_rules! assert_support {
     ($cond:expr, $($arg:tt)+) => {
         if !$cond {
-            Err(Unsupported(format!($($arg)+)))?
+            Err($crate::Unsupported(format!($($arg)+)))?
         }
     };
+}
+
+#[macro_export]
+macro_rules! unsupported {
+    ($($arg:tt)+) => (return Err($crate::Unsupported(format!($($arg)+)).into()));
 }
 
 fn resolve_image_path(base_dir: &Path, image_path: &str) -> Result<PathBuf, LoadError> {
@@ -229,10 +234,13 @@ impl Level {
             ref object_groups,
             properties: _,
             background_colour: map_background_color,
+            infinite,
         } = *map.as_map();
 
         assert_support!(orientation == tiled::Orientation::Orthogonal,
             "only maps with orthogonal orientation are supported");
+        assert_support!(!infinite,
+            "only finite maps are supported");
 
         if !image_layers.is_empty() {
             println!("Warning: image layers are not supported yet and will be ignored");

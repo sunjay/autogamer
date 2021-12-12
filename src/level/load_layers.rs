@@ -18,6 +18,7 @@ use crate::{
     Shape,
     PhysicsCollider,
     EntityEditor,
+    unsupported,
 };
 
 use super::{TILE_DRAW_ORDER, TileId, LoadError, image_params::TiledImageParams};
@@ -39,18 +40,25 @@ pub fn load_layers(
             opacity,
             // A layer's visibility in Tiled does not affect its visibility here
             visible: _,
-            tiles: ref layer_tiles,
+            tiles: ref layer_data,
             properties: _,
             layer_index,
+            offset_x,
+            offset_y,
         } = *layer;
 
-        //TODO: Use the actual layer offset once we are using a library that
-        // actually provides that to us
-        let layer_offset = Vec2::default();
+        let layer_offset = Vec2::new(offset_x as f64, offset_y as f64);
 
         assert!(layer_index >= prev_layer_index,
             "bug: this code assumes that the layers are stored in draw order");
         prev_layer_index = layer_index;
+
+        let layer_tiles = match layer_data {
+            tiled::LayerData::Finite(layer_tiles) => layer_tiles,
+            //TODO: Infinite maps should be reasonably easy to support if we make an iterator over
+            // LayerData that yields world_pos and LayerTile
+            tiled::LayerData::Infinite(..) => unsupported!("infinite map layers are not supported yet"),
+        };
 
         if name.trim().eq_ignore_ascii_case("map") {
             if found_map {

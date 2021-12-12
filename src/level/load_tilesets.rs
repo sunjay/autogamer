@@ -5,6 +5,7 @@ use tiled::Tileset;
 
 use crate::{
     assert_support,
+    unsupported,
     Size,
     Point2,
     Vec2,
@@ -147,6 +148,10 @@ fn object_to_collision_geometry(obj: &tiled::Object) -> Result<(Vec2, Shape), Un
 
     let position = Vec2::new(x as f64, y as f64);
     let shape = match shape {
+        tiled::ObjectShape::Point(..) => {
+            unsupported!("invalid collision geometry: single point shapes are not supported (object ID = {}", id);
+        },
+
         &tiled::ObjectShape::Rect {width, height} => {
             let half_extents = Vec2::new(width as f64/2.0, height as f64/2.0);
             Shape::Rect(ShapeRect::new(half_extents))
