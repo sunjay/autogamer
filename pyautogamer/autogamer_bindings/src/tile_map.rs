@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 use autogamer as ag;
 use pyo3::prelude::*;
-use pyo3::exceptions::ValueError;
+use pyo3::exceptions::PyValueError;
 
 /// Represents the raw data in a Tiled TMX file.
 ///
@@ -32,11 +32,11 @@ impl TileMap {
     pub fn new(path: &str) -> PyResult<Self> {
         let path: &Path = path.as_ref();
         let base_dir = path.parent()
-            .ok_or_else(|| ValueError::py_err("Path to tiled map file did not have a valid parent directory"))?
+            .ok_or_else(|| PyValueError::new_err("Path to tiled map file did not have a valid parent directory"))?
             .to_path_buf();
 
         let map = ag::TileMap::open(path)
-            .map_err(|err| ValueError::py_err(err.to_string()))?;
+            .map_err(|err| PyValueError::new_err(err.to_string()))?;
 
         Ok(Self {base_dir, map})
     }

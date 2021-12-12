@@ -43,8 +43,7 @@ impl ShapeRect {
 #[pymethods]
 impl ShapeRect {
     #[new]
-    //TODO(PyO3/pyo3#1025): These should be keyword-only arguments with no defaults
-    #[args("*", width="0.0", height="0.0")]
+    #[args("*", width, height)]
     pub fn new(width: f64, height: f64) -> (Self, Shape) {
         (Self {width, height}, Shape::default())
     }

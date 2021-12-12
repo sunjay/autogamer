@@ -5,7 +5,7 @@ use autogamer as ag;
 use pyo3::prelude::*;
 use pyo3::PyTraverseError;
 use pyo3::gc::{PyGCProtocol, PyVisit};
-use pyo3::exceptions::ValueError;
+use pyo3::exceptions::PyValueError;
 
 use crate::*;
 
@@ -41,20 +41,8 @@ impl PyGCProtocol for Game {
         Ok(())
     }
 
-    fn __clear__(&mut self) {
-        let Self {
-            game: _,
-            current_screen,
-        } = self;
-
-        // Release reference, this decrements the ref counter
-        let gil = GILGuard::acquire();
-        let py = gil.python();
-
-        if let Some(current_screen) = current_screen.take() {
-            py.release(&current_screen);
-        }
-    }
+    //TODO: Determine if we need to drop the Py<...> fields to avoid leaking memory/reference cycles
+    fn __clear__(&mut self) {}
 }
 
 #[pymethods]
@@ -100,7 +88,7 @@ impl Game {
         }
 
         let (mut window, canvas) = slf.game.create_window()
-            .map_err(|err| ValueError::py_err(err.to_string()))?;
+            .map_err(|err| PyValueError::new_err(err.to_string()))?;
         let image_cache = slf.game.image_cache().clone();
 
         // Create the texture creator that will load images
@@ -140,10 +128,7 @@ impl Game {
                 // changed during the previous iteration
                 let current_screen = slf.current_screen.as_ref()
                     .expect("bug: should be impossible to set current_screen to None once initialized");
-                //TODO: Calling trait method in fully-qualified form because
-                // rust-analyzer couldn't handle two different as_ref methods
-                // taking a different number of arguments
-                let current_screen = AsPyRef::as_ref(current_screen, slf.py());
+                let current_screen = current_screen.as_ref(slf.py());
 
                 // Need to use call_method because we want to call the
                 // overridden versions of these methods, not just the methods on

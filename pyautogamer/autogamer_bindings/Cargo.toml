@@ -11,10 +11,9 @@ crate-type = ["cdylib"]
 autogamer = {path = "../.."}
 specs = {git = "https://github.com/amethyst/specs", features = ["derive"]}
 parking_lot = "0.11"
-bstringify = "0.1"
 
 [dependencies.pyo3]
-version = "0.11"
+version = "0.15"
 features = ["extension-module"]
 
 [build-dependencies]

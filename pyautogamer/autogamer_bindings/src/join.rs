@@ -3,7 +3,7 @@ use std::sync::Arc;
 use autogamer as ag;
 use pyo3::prelude::*;
 use pyo3::PyIterProtocol;
-use pyo3::exceptions::ValueError;
+use pyo3::exceptions::PyValueError;
 use pyo3::types::PyTuple;
 use specs::{WorldExt, BitSet, hibitset::{BitIter, BitSetLike}, world::Index};
 use parking_lot::Mutex;
@@ -80,7 +80,7 @@ impl Iterator for Join {
     type Item = PyResult<Py<PyTuple>>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let gil = GILGuard::acquire();
+        let gil = Python::acquire_gil();
         let py = gil.python();
 
         // Search for the next alive entity
@@ -102,7 +102,7 @@ impl Iterator for Join {
 
                 // Raise an exception if a component we were iterating over has
                 // been removed.
-                Ok(None) => return Some(Err(ValueError::py_err(format!("Component `{}` was removed from an entity during iteration over a join operation", class.name())))),
+                Ok(None) => return Some(Err(PyValueError::new_err(format!("Component `{}` was removed from an entity during iteration over a join operation", class.name())))),
 
                 Err(err) => return Some(Err(err)),
             };

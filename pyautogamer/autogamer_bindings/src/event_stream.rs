@@ -68,15 +68,15 @@ impl ag::EventStreamSource for EventStream {
     fn for_each_event<F>(&self, mut f: F)
         where F: FnMut(&mut ag::Event)
     {
-        let gil = GILGuard::acquire();
-        let py = gil.python();
-        for event in &self.events {
-            let mut event = event.borrow_mut(py);
-            let event = event.inner_mut();
-            if event.should_propagate() {
-                f(event);
+        Python::with_gil(|py| {
+            for event in &self.events {
+                let mut event = event.borrow_mut(py);
+                let event = event.inner_mut();
+                if event.should_propagate() {
+                    f(event);
+                }
             }
-        }
+        })
     }
 }
 
@@ -110,7 +110,7 @@ impl Iterator for EventStreamIter {
         loop {
             let event = self.inner.next()?;
 
-            let gil = GILGuard::acquire();
+            let gil = Python::acquire_gil();
             let py = gil.python();
             if event.borrow(py).inner().should_propagate() {
                 break Some(event);

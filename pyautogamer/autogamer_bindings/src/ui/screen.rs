@@ -19,13 +19,8 @@ impl PyGCProtocol for Screen {
         Ok(())
     }
 
-    fn __clear__(&mut self) {
-        let Self {game} = self;
-        // Release reference, this decrements the ref counter
-        let gil = GILGuard::acquire();
-        let py = gil.python();
-        py.release(&*game);
-    }
+    //TODO: Determine if we need to drop the Py<...> fields to avoid leaking memory/reference cycles
+    fn __clear__(&mut self) {}
 }
 
 #[pymethods]

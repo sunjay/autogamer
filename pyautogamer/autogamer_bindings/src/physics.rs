@@ -6,11 +6,11 @@ pub fn add_physics_mod(py: Python, pymod: &PyModule) -> PyResult<()> {
     pymod.add_class::<CollisionGroups>()?;
 
     let ground_groups = CollisionGroups::from(ag::PhysicsCollider::ground_collision_groups());
-    pymod.add("GROUND_COLLISION_GROUPS", &PyCell::new(py, ground_groups)?)?;
+    pymod.add("GROUND_COLLISION_GROUPS", ground_groups)?;
     let player_groups = CollisionGroups::from(ag::PhysicsCollider::player_collision_groups());
-    pymod.add("PLAYER_COLLISION_GROUPS", &PyCell::new(py, player_groups)?)?;
+    pymod.add("PLAYER_COLLISION_GROUPS", player_groups)?;
     let enemy_groups = CollisionGroups::from(ag::PhysicsCollider::enemy_collision_groups());
-    pymod.add("ENEMY_COLLISION_GROUPS", &PyCell::new(py, enemy_groups)?)?;
+    pymod.add("ENEMY_COLLISION_GROUPS", enemy_groups)?;
 
     Ok(())
 }

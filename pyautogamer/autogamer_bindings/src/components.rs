@@ -3,9 +3,8 @@ use std::sync::Arc;
 use autogamer as ag;
 use pyo3::prelude::*;
 use pyo3::types::PyString;
-use pyo3::exceptions::ValueError;
+use pyo3::exceptions::PyValueError;
 use specs::{World, WorldExt, BitSet};
-use bstringify::bstringify;
 use parking_lot::Mutex;
 
 use crate::*;
@@ -28,7 +27,7 @@ macro_rules! components {
                 }
             )*
 
-            Err(ValueError::py_err("Unknown component"))
+            Err(PyValueError::new_err("Unknown component"))
         }
 
         pub trait PyWriteComponent {
@@ -64,15 +63,15 @@ macro_rules! components {
                 // class. No idea how to do that yet...
                 let name = class.getattr("__name__")?;
                 let name: &PyString = name.cast_as()?;
-                let name = name.as_bytes()?;
+                let name = name.to_str()?;
 
                 #[deny(unreachable_patterns)]
                 Ok(match name {
-                    b"Entity" => PyComponentClass::Entity,
+                    "Entity" => PyComponentClass::Entity,
 
-                    $(bstringify!($component) => PyComponentClass::$component,)*
+                    $(stringify!($component) => PyComponentClass::$component,)*
 
-                    _ => return Err(ValueError::py_err("Unknown component")),
+                    _ => return Err(PyValueError::new_err("Unknown component")),
                 })
             }
 
@@ -185,7 +184,7 @@ macro_rules! components {
             ) -> PyResult<Option<PyObject>> {
                 Ok(match self {
                     PyComponentClass::Entity => {
-                        return Err(ValueError::py_err("`Entity` is not a component, so it cannot be removed from an entity"));
+                        return Err(PyValueError::new_err("`Entity` is not a component, so it cannot be removed from an entity"));
                     },
 
                     $(PyComponentClass::$component => {
@@ -369,8 +368,7 @@ impl From<(Arc<Mutex<ag::Level>>, specs::Entity, ag::PhysicsBody)> for PhysicsBo
 #[pymethods]
 impl PhysicsBody {
     #[new]
-    //TODO(PyO3/pyo3#1025): `mass` should be a keyword-only argument with no default
-    #[args("*", mass="0.0")]
+    #[args("*", mass)]
     pub fn new(mass: f64) -> Self {
         Self {
             entity: None,
@@ -431,11 +429,10 @@ impl From<(Arc<Mutex<ag::Level>>, specs::Entity, ag::PhysicsCollider)> for Physi
 #[pymethods]
 impl PhysicsCollider {
     #[new]
-    //TODO(PyO3/pyo3#1025): `shape` should be a keyword-only argument with no default
-    #[args("*", shape="todo!()", offset="None", density="0.0", collision_groups="None")]
+    #[args("*", shape, offset="None", density="0.0", collision_groups="None")]
     pub fn new(shape: &PyAny, offset: Option<(f64, f64)>, density: f64, collision_groups: Option<CollisionGroups>) -> PyResult<Self> {
         let shape = Shape::to_shape(shape)
-            .ok_or_else(|| ValueError::py_err("Unknown shape"))?;
+            .ok_or_else(|| PyValueError::new_err("Unknown shape"))?;
         let (offset_x, offset_y) = offset.unwrap_or_default();
         let offset = ag::Vec2::new(offset_x, offset_y);
         let collision_groups = collision_groups.map(|groups| groups.inner().clone())
@@ -575,10 +572,8 @@ impl PlatformerControls {
     #[new]
     #[args(
         "*",
-        //TODO(PyO3/pyo3#1025): These should be keyword-only arguments with no defaults
-        horizontal_velocity = "0.0",
-        jump_velocity = "0.0",
-        //TODO: Arguments below this line can continue to have a default value
+        horizontal_velocity,
+        jump_velocity,
         midair_horizontal_multiplier = "1.0",
     )]
     pub fn new(
