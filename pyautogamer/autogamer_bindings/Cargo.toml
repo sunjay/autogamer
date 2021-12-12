@@ -16,3 +16,6 @@ bstringify = "0.1"
 [dependencies.pyo3]
 version = "0.11"
 features = ["extension-module"]
+
+[build-dependencies]
+pyo3-build-config = "0.15"
