@@ -5,7 +5,7 @@ members = ["pyautogamer/autogamer_bindings"]
 name = "autogamer"
 version = "0.1.0"
 authors = ["Sunjay Varma <varma.sunjay@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 tiled = "0.9"
