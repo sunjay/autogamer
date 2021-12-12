@@ -61,6 +61,9 @@ def copy(src, dst):
     print("cp '{}' '{}'".format(src, dst))
     copy2(src, dst)
 
+def check(app, args, build_args):
+    run_command(["cargo", "check", "--all", *build_args])
+
 def build(app, args, build_args):
     if args.release:
         mode = "release"
@@ -117,6 +120,8 @@ def parse_args():
         subcommand.add_argument("--target", metavar="TRIPLE",
             help="compile autogamer for the given target triple")
 
+    check = subcommands.add_parser("check")
+
     build = subcommands.add_parser("build")
     add_build_args(build)
 
@@ -140,7 +145,9 @@ def main():
         pydir="pyautogamer",
     )
 
-    if args.subcommand == "build":
+    if args.subcommand == "check":
+        check(app, args, unknownargs)
+    elif args.subcommand == "build":
         build(app, args, unknownargs)
     elif args.subcommand == "run":
         run(app, args, unknownargs)
