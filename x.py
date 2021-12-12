@@ -54,6 +54,11 @@ def get_platform(target=None):
         raise ValueError("x.py ran with unsupported target: {}".format(target))
 
 def run_command(cmd, **run_args):
+    # inherit program environment
+    env = run_args.get("env", {})
+    env = {**os.environ, **env}
+    run_args["env"] = env
+
     print(" ".join(cmd))
     subprocess.run(cmd, check=True, **run_args)
 
@@ -104,7 +109,7 @@ def run(app, args, build_args):
         run_command(
             [sys.executable, scriptname],
             cwd="sample",
-            env={**os.environ, "PYTHONPATH": autogamerlib},
+            env={"PYTHONPATH": autogamerlib},
         )
     except subprocess.CalledProcessError:
         print("Command exited with an error")
