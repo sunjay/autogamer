@@ -5,7 +5,11 @@ import sys
 import argparse
 import subprocess
 
+from glob import glob
 from shutil import copy2
+from itertools import chain
+
+NATIVEMOD_GLOBS = ['*.so', '*.pyd']
 
 class App:
     def __init__(self, *, libname, pydir):
@@ -115,6 +119,14 @@ def run(app, args, build_args):
         print("Command exited with an error")
         sys.exit(1)
 
+def clean(app, args, build_args):
+    run_command(["cargo", "clean"])
+
+    nativemod_paths = chain(*map(lambda g: glob(os.path.join(app.pydir, g)), NATIVEMOD_GLOBS))
+    for path in nativemod_paths:
+        print("rm '{}'".format(path))
+        os.remove(path)
+
 def parse_args():
     parser = argparse.ArgumentParser()
     subcommands = parser.add_subparsers(dest="subcommand")
@@ -129,6 +141,8 @@ def parse_args():
 
     build = subcommands.add_parser("build")
     add_build_args(build)
+
+    clean = subcommands.add_parser("clean")
 
     run = subcommands.add_parser("run")
     run.add_argument("--sample", metavar="SAMPLE", default="demo.py",
@@ -154,6 +168,8 @@ def main():
         check(app, args, unknownargs)
     elif args.subcommand == "build":
         build(app, args, unknownargs)
+    elif args.subcommand == "clean":
+        clean(app, args, unknownargs)
     elif args.subcommand == "run":
         run(app, args, unknownargs)
     else:
