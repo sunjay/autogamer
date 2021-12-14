@@ -152,8 +152,7 @@ fn apply_object_templates(
 ) -> Result<(), LoadError> {
     match obj_type {
         "level_start" => {
-            let point_shape = tiled::ObjectShape::Rect {width: 0.0, height: 0.0};
-            if *shape == point_shape {
+            if matches!(shape, tiled::ObjectShape::Point(..)) {
                 if level_start.is_some() {
                     println!("Warning: ignoring duplicate `level_start` indicator (ID = {})", id);
 
